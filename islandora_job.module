@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * Implements hook_help().
+ */
+function islandora_job_help() {
+
+}
