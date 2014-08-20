@@ -6,3 +6,22 @@
 function islandora_job_help() {
 
 }
+
+/**
+ * Implements hook_register_jobs().
+ */
+function islandora_job_register_jobs() {
+  $jobs = array(
+    'islandora_job_example_job' => array(
+      'type' => 'module',
+      'module' => 'islandora_job',
+    ),
+  );
+  return $jobs;
+}
+
+function islandora_job_example_job($msg) {
+  // There's no real implementation yet, so just log something.
+  dd("MESSAGE: ");
+  dd($msg);
+}
