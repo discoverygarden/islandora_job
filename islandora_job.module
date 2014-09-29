@@ -1,10 +1,24 @@
 <?php
 
 /**
- * Implements hook_help().
+ * @file
+ * Hooks and API for the islandora_job_module.
  */
-function islandora_job_help() {
 
+/**
+ * Implements hook_menu().
+ */
+function islandora_job_menu() {
+  $items = array();
+  $items['admin/islandora/tools/job'] = array(
+    'title' => 'Islandora Job',
+    'description' => 'Configuration page for the Islandora Job module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_job_admin_form'),
+    'access callback' => TRUE,
+    'file' => 'includes/admin.form.inc',
+  );
+  return $items;
 }
 
 /**
@@ -12,16 +26,102 @@ function islandora_job_help() {
  */
 function islandora_job_register_jobs() {
   $jobs = array(
-    'islandora_job_example_job' => array(
-      'type' => 'module',
+    'islandora_job_test_job' => array(
+      'type' => 'test',
       'module' => 'islandora_job',
+      'name' => 'test/islandora_job',
+    ),
+    'islandora_job_test_job_with_multiple_args' => array(
+      'type' => 'test',
+      'module' => 'islandora_job',
+      'name' => 'test/islandora_job',
+    ),
+    'islandora_job_test_job_with_serialized_obj_arg' => array(
+      'type' => 'test',
+      'module' => 'islandora_job',
+      'name' => 'test/islandora_job',
+    ),
+    'islandora_job_test_long_process' => array(
+      'type' => 'test',
+      'module' => 'islandora_job',
+      'name' => 'test/islandora_job',
     ),
   );
   return $jobs;
 }
 
-function islandora_job_example_job($msg) {
-  // There's no real implementation yet, so just log something.
-  dd("MESSAGE: ");
-  dd($msg);
+/**
+ * Runs a job in the foreground.
+ *
+ * Returns the result of the job to the requesting code. All parameters other
+ * than the job name are considered arguments for the job.  Arguments get
+ * JSON encoded as an array.
+ *
+ * @param string $job_name
+ *   Name of the job to run.
+ *
+ * @return string
+ *   The result of the job
+ */
+function islandora_job_submit($job_name) {
+  module_load_include('inc', 'islandora_job', 'includes/utilities');
+  $payload = islandora_job_format_payload($job_name, func_get_args());
+  $client = islandora_job_get_client();
+  return $client->doNormal('islandora_job', $payload);
+}
+
+/**
+ * Runs a job in the background.
+ *
+ * The result is never returned to the requesting code. All parameters other
+ * than the job name are considered arguments for the job.  Arguments get
+ * JSON encoded as an array.
+ *
+ * @param string $job_name
+ *   Name of the job to run.
+ *
+ * @return string
+ *   The job handle
+ */
+function islandora_job_submit_background($job_name) {
+  module_load_include('inc', 'islandora_job', 'includes/utilities');
+  $payload = islandora_job_format_payload($job_name, func_get_args());
+  $client = islandora_job_get_client();
+  return $client->doBackground('islandora_job', $payload);
+}
+
+/**
+ * Runs multiple jobs with as much concurrency as possible.
+ *
+ * Blocks until all are complete.
+ *
+ * @param array $tasks
+ *   Contains any nymber of entries that look like this:
+ *   [
+ *     'job_name' => 'my_sweet_job_function',
+ *     'args' => array('herp', 'derp'),
+ *   ]
+ * @param callable $callback
+ *   A callback for when each task is completed.  See
+ *   http://php.net/manual/en/gearmanclient.setcompletecallback.php
+ *   and http://gearman.org/examples/multi-query/ for more.
+ *
+ * @return bool
+ *   TRUE on success.
+ */
+function islandora_job_submit_batch($tasks, $callback = NULL) {
+  module_load_include('inc', 'islandora_job', 'includes/utilities');
+  $client = islandora_job_get_client();
+  if (!is_null($callback)) {
+    $client->setCompleteCallback($callback);
+  }
+  foreach ($tasks as $task) {
+    $job_name = $task['job_name'];
+    $args = $task['args'];
+    // Push on a dummy arg as if this array came from func_get_args().
+    array_unshift($args, '');
+    $payload = islandora_job_format_payload($job_name, $args);
+    $client->addTask('islandora_job', $payload);
+  }
+  return $client->runTasks();
 }

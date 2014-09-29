@@ -1,0 +1,206 @@
+<?php
+
+/**
+ * @file
+ * Unit tests for the islandora_job module.
+ */
+
+/**
+ * Basic job.
+ *
+ * Does nothing.  Returns a string.
+ *
+ * @return string
+ *   A dummy return value.
+ */
+function islandora_job_test_job() {
+  return "foo";
+}
+
+/**
+ * Basic job with multiple arguments of different types.
+ *
+ * Increments the integer argument.  Returns a string of concatenated values.
+ *
+ * @param int $a
+ *   A number
+ * @param string $b
+ *   A string
+ *
+ * @return string
+ *   A dummy return value.  The incremented integer concatenated with the
+ *   string argument.
+ */
+function islandora_job_test_job_with_multiple_args($a, $b) {
+  $a++;
+  return "$b$a";
+}
+
+/**
+ * Basic job with a serialized object as an argument.
+ *
+ * Checks to make sure object can be successfully unserialized, and that both
+ * methods and member variables are preserved across the wire.
+ *
+ * @param string $serialized_obj
+ *   The serialized object
+ *
+ * @return string
+ *   The value of the object's function call, which is concatenated with a
+ *   member variable.
+ */
+function islandora_job_test_job_with_serialized_obj_arg($serialized_obj) {
+  $obj = unserialize($serialized_obj);
+  return $obj->getString();
+}
+
+/**
+ * Basic job used to illustrate the effects of not blocking.
+ *
+ * @param int $sec
+ *   The number of seconds it will take to complete this process.
+ */
+function islandora_job_test_long_process($sec) {
+  sleep($sec);
+}
+
+/**
+ * Test object that proves properties and methods survive across the wire.
+ */
+class SerializationTestObject {
+
+  private $str = NULL;
+
+  /**
+   * Ctor.
+   *
+   * @param string $str
+   *   An arbitrary string.
+   */
+  public function __construct($str) {
+    $this->str = $str;
+  }
+
+  /**
+   * Function that proves both properties and methods have survived.
+   *
+   * @return string
+   *   Returns $this->value
+   */
+  public function getString() {
+    return $this->str;
+  }
+}
+
+/**
+ * Unit tests for the islandora_job module.
+ */
+class IslandoraJobUnitTestCase extends DrupalUnitTestCase {
+
+  /**
+   * Provides a description of these tests.
+   *
+   * @see DrupalUnitTestCase::getInfo()
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Islandora Job',
+      'description' => 'Validates the Islandora Job API',
+      'group' => 'Islandora',
+    );
+  }
+
+  /**
+   * Sets up the requirements for each test.
+   *
+   * @see DrupalUnitTestCase::setUp()
+   */
+  public function setUp() {
+    parent::setUp('islandora_job');
+    module_load_include('inc', 'islandora_job', 'includes/utilities');
+    islandora_job_start_worker(file_directory_temp() . '/worker.pid');
+  }
+
+  /**
+   * Cleans up the requirements for each test.
+   *
+   * @see DrupalUnitTestCase::tearDown()
+   */
+  public function tearDown() {
+    module_load_include('inc', 'islandora_job', 'includes/utilities');
+    islandora_job_stop_worker(file_directory_temp() . '/worker.pid');
+    parent::tearDown('islandora_job');
+  }
+
+  /**
+   * Tests jobs running in the foreground.
+   */
+  public function testJob() {
+    $result = islandora_job_submit('islandora_job_test_job', array());
+    $this->assertTrue(strcmp($result, "foo") == 0, "Expected: foo, Actual: $result.");
+  }
+
+  /**
+   * Tests that multiple arguments get encoded and decoded correctly.
+   */
+  public function testJobWithMultipleArgs() {
+    $a = 1;
+    $b = "foo";
+    $result = islandora_job_submit('islandora_job_test_job_with_multiple_args', $a, $b);
+    $this->assertTrue(strcmp($result, "foo2") == 0, "Expected: foo2, Actual: $result");
+  }
+
+  /**
+   * Tests that object arguments get serialized and deserialized correctly.
+   */
+  public function testJobWithSerializedObjArg() {
+    $obj = new SerializationTestObject('foo');
+    $obj_str = serialize($obj);
+    $result = islandora_job_submit('islandora_job_test_job_with_serialized_obj_arg', $obj_str);
+    $this->assertTrue(strcmp($result, "foo") == 0, "Expected: foo, Actual: $result.");
+  }
+
+  /**
+   * Test that background tests don't block.
+   */
+  public function testBackgroundJob() {
+    $duration = 1;
+    $start = microtime(TRUE);
+    islandora_job_submit_background('islandora_job_test_long_process', $duration);
+    $total_time = number_format(microtime(TRUE) - $start, 2);
+    $this->assertTrue($total_time < $duration, "Expected: Did not block for $duration seconds. Actual: $total_time seconds.");
+  }
+
+  /**
+   * Test that processing batches in parallel is faster.
+   */
+  public function testBatch() {
+    $tasks = array();
+
+    for ($i = 0; $i < 5; $i++) {
+      array_push(
+        $tasks,
+        array(
+          'job_name' => 'islandora_job_test_long_process',
+          'args' => array(1),
+        )
+      );
+    }
+
+    $start = microtime(TRUE);
+    islandora_job_submit_batch($tasks);
+    $one_worker_total_time = number_format(microtime(TRUE) - $start, 2);
+
+    for ($i = 0; $i < 4; $i++) {
+      islandora_job_start_worker(file_directory_temp() . "/worker.pid.$i");
+    }
+    $start = microtime(TRUE);
+    islandora_job_submit_batch($tasks);
+    $five_worker_total_time = number_format(microtime(TRUE) - $start, 2);
+    for ($i = 0; $i < 4; $i++) {
+      islandora_job_stop_worker(file_directory_temp() . "/worker.pid.$i");
+    }
+
+    $this->assertTrue($five_worker_total_time < $one_worker_total_time, "Expected: Five workers faster than one. Five workers: $five_worker_total_time sec. One worker: $one_worker_total_time sec.");
+  }
+}
