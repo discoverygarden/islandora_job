@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * Install hooks for the islandora_job module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function islandora_job_uninstall() {
+  variable_del('islandora_job_server_host');
+  variable_del('islandora_job_server_port');
+}

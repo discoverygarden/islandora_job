@@ -14,19 +14,19 @@
  *   Array containing the form state.
  */
 function islandora_job_admin_form($form, &$form_state) {
-  $form['job_server_host'] = array(
+  $form['islandora_job_server_host'] = array(
     '#type' => 'textfield',
     '#title' => t('Job Server Hostname'),
     '#description' => t('Address to the job server'),
     '#required' => TRUE,
-    '#default_value' => variable_get('job_server_host', 'localhost'),
+    '#default_value' => variable_get('islandora_job_server_host', 'localhost'),
   );
-  $form['job_server_port'] = array(
+  $form['islandora_job_server_port'] = array(
     '#type' => 'textfield',
     '#title' => t('Job Server Port'),
     '#description' => t('Port that the job server is listening on'),
     '#required' => TRUE,
-    '#default_value' => variable_get('job_server_port', 4730),
+    '#default_value' => variable_get('islandora_job_server_port', 4730),
   );
   return system_settings_form($form);
 }
