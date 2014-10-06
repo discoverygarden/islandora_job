@@ -6,6 +6,47 @@
  */
 
 /**
+ * Implements hook_requirements().
+ */
+function islandora_job_requirements($phase) {
+  $t = get_t();
+
+  $requirements = array();
+
+  if (strcmp($phase, 'install') == 0) {
+    // Check for PECL extension
+    $has_gearman_extension = function_exists('gearman_version');
+    $requirements['gearman_extension'] = array(
+      'title' => $t("Gearman PHP Extension"),
+    );
+    if ($has_gearman_extension) {
+      $requirements['gearman_extension']['description'] = $t("Installed");
+      $requirements['gearman_extension']['severity'] = REQUIREMENT_OK;
+    }
+    else {
+      $requirements['gearman_extension']['description'] = $t("Not Installed");
+      $requirements['gearman_extension']['severity'] = REQUIREMENT_ERROR;
+    }
+
+    // Check for the gearman executable in the shell's path
+    $has_gearman_executable = exec('which gearman');
+    $requirements['gearman_executable'] = array(
+      'title' => $t("Gearman Shell"),
+    );
+    if ($has_gearman_executable) {
+      $requirements['gearman_executable']['description'] = $t("Installed");
+      $requirements['gearman_executable']['severity'] = REQUIREMENT_OK;
+    }
+    else {
+      $requirements['gearman_executable']['description'] = $t("Not Installed");
+      $requirements['gearman_executable']['severity'] = REQUIREMENT_ERROR;
+    }
+  }
+
+  return $requirements;
+}
+
+/**
  * Implements hook_uninstall().
  */
 function islandora_job_uninstall() {
