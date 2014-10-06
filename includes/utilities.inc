@@ -65,7 +65,14 @@ function islandora_job_start_worker($pidfile) {
       unlink($pidfile);
     }
   }
-  exec('cd ' . DRUPAL_ROOT . '; gearman -i ' . escapeshellarg($pidfile) . ' -v -w -f islandora_job xargs drush islandora-job-router > /dev/null &');
+
+  // Get the list of all available jobs to run the router for.
+  $job_registry = module_invoke_all("register_jobs");
+  $job_names = array_keys($job_registry);
+  $job_names_string = trim(implode(' ', $job_names));
+
+  // Start the worker in the background after moving into drupal root.
+  exec('cd ' . DRUPAL_ROOT . '; gearman -i ' . escapeshellarg($pidfile) . ' -v -w -f ' . escapeshellarg($job_names_string) . ' xargs drush islandora-job-router > /dev/null &');
   return TRUE;
 }
 

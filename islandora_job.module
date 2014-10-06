@@ -67,7 +67,7 @@ function islandora_job_submit($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
   $payload = islandora_job_format_payload($job_name, func_get_args());
   $client = islandora_job_get_client();
-  return $client->doNormal('islandora_job', $payload);
+  return $client->doNormal($job_name, $payload);
 }
 
 /**
@@ -87,7 +87,7 @@ function islandora_job_submit_background($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
   $payload = islandora_job_format_payload($job_name, func_get_args());
   $client = islandora_job_get_client();
-  return $client->doBackground('islandora_job', $payload);
+  return $client->doBackground($job_name, $payload);
 }
 
 /**
@@ -96,7 +96,7 @@ function islandora_job_submit_background($job_name) {
  * Blocks until all are complete.
  *
  * @param array $tasks
- *   Contains any nymber of entries that look like this:
+ *   Contains any number of entries that look like this:
  *   [
  *     'job_name' => 'my_sweet_job_function',
  *     'args' => array('herp', 'derp'),
@@ -121,7 +121,7 @@ function islandora_job_submit_batch($tasks, $callback = NULL) {
     // Push on a dummy arg as if this array came from func_get_args().
     array_unshift($args, '');
     $payload = islandora_job_format_payload($job_name, $args);
-    $client->addTask('islandora_job', $payload);
+    $client->addTask($job_name, $payload);
   }
   return $client->runTasks();
 }
