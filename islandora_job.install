@@ -20,11 +20,11 @@ function islandora_job_requirements($phase) {
       'title' => $t("Gearman PHP Extension"),
     );
     if ($has_gearman_extension) {
-      $requirements['gearman_extension']['description'] = $t("Installed");
+      $requirements['gearman_extension']['description'] = $t("Gearman PHP extension is installed.");
       $requirements['gearman_extension']['severity'] = REQUIREMENT_OK;
     }
     else {
-      $requirements['gearman_extension']['description'] = $t("Not Installed");
+      $requirements['gearman_extension']['description'] = $t("Gearman PHP extension is not installed.");
       $requirements['gearman_extension']['severity'] = REQUIREMENT_ERROR;
     }
 
@@ -34,11 +34,11 @@ function islandora_job_requirements($phase) {
       'title' => $t("Gearman Shell"),
     );
     if ($has_gearman_executable) {
-      $requirements['gearman_executable']['description'] = $t("Installed");
+      $requirements['gearman_executable']['description'] = $t("Gearman executable is in PATH.");
       $requirements['gearman_executable']['severity'] = REQUIREMENT_OK;
     }
     else {
-      $requirements['gearman_executable']['description'] = $t("Not Installed");
+      $requirements['gearman_executable']['description'] = $t("Gearman executable is not in PATH.");
       $requirements['gearman_executable']['severity'] = REQUIREMENT_ERROR;
     }
   }
