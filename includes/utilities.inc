@@ -55,24 +55,16 @@ function islandora_job_format_payload($job_name, $args) {
  *   pidfile exists and its process is still running.
  */
 function islandora_job_start_worker($pidfile) {
-  // When needed, this'll have to work on other platforms...
-  if (file_exists($pidfile)) {
-    $pid = trim(file_get_contents($pidfile));
-    if (file_exists("/proc/$pid")) {
-      return FALSE;
-    }
-    else {
-      unlink($pidfile);
-    }
-  }
-
   // Get the list of all available jobs to run the router for.
+  // Be sure to sanitize them.  No funny business, mister!
   $job_registry = module_invoke_all("register_jobs");
-  $job_names = array_keys($job_registry);
+  $job_names = array_map("escapeshellarg", array_keys($job_registry));
   $job_names_string = '-f ' . implode(' -f ', $job_names);
 
   // Start the worker in the background after moving into drupal root.
-  exec('cd ' . DRUPAL_ROOT . '; gearman -i ' . escapeshellarg($pidfile) . ' -v -w ' . escapeshellarg($job_names_string) . ' xargs drush islandora-job-router > /dev/null &');
+  // Sanitize and use the specified pid file.
+  $cmd = '(cd ' . DRUPAL_ROOT . ' && gearman -v -w ' . $job_names_string . ' -i ' . escapeshellarg($pidfile) . ' xargs drush islandora-job-router) > /dev/null 2>&1 &';
+  exec($cmd);
   return TRUE;
 }
 
