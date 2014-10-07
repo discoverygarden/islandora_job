@@ -106,7 +106,7 @@ islandora_job_start_worker("worker.pid");   // Starts a worker and puts its proc
                                             // or wherever else you've defined the temporary directory for Drupal to be.
                                             // Requires write access to the temporary directory and to the pidfile if it already exists.
 
-islandora_job_stop_worker("worker.pid");    // Reads the process id from /tmp/worker.pid and uses it to kill the worker.
+islandora_job_stop_worker("worker.pid");    // Reads the process id from worker.pid and uses it to kill the worker.
                                             // Requires read access to the pid file.
 ```
 
@@ -153,4 +153,4 @@ TRUNCATE TABLE gearman_queue;
 
 Accepting Remote Connections
 ----------------------------
-By default, Gearman will only accept connections from localhost.  If you want to allow connections from other computers,  change the `--listen` argument to include your whitelisted ip in /etc/default/gearman-job-server.
+By the defaults defined in /etc/default/gearman-job-server, Gearman will only accept connections from localhost.  If you want to allow connections from other computers,  change the `--listen` argument to include your whitelisted ip in the defaults file.
