@@ -133,6 +133,11 @@ PARAMS=”--verbose -q libpq --libpq-table=gearmanqueue1 --verbose”
 
 There is no need to manually create any tables for either database type.  Gearman will create the queue table on its own if it does not exist.
 
+Of course, you’ll have to restart the server for these changes to take effect.
+```bash
+sudo service restart gearman-job-server
+```
+
 How many jobs are left?
 -----------------------
 You can determine how many job are left by issuing a query to the database table defined in the `gearmand` args.
@@ -140,6 +145,8 @@ You can determine how many job are left by issuing a query to the database table
 ```sql
 SELECT function_name, COUNT(function_name) FROM gearman_queue GROUP BY function_name;
 ```
+
+This, of course, assumes you are using a database for persistence.
 
 Clearing the job queue
 ----------------------
@@ -151,6 +158,11 @@ DELETE FROM gearman_queue WHERE function_name = "my_borked_function_name";
 
 # Nuke 'em Rico!
 TRUNCATE TABLE gearman_queue;
+```
+
+This, of course, assumes you are using a database for persistence.  If you like running fast and loose (e.g. no persistence), then you can just restart the gearman server and it’ll clobber any jobs remaining.
+```bash
+sudo service restart gearman-job-server
 ```
 
 Accepting Remote Connections
