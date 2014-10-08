@@ -14,7 +14,7 @@ function islandora_job_requirements($phase) {
   $requirements = array();
 
   if (strcmp($phase, 'install') == 0) {
-    // Check for PECL extension
+    // Check for PECL extension.
     $has_gearman_extension = function_exists('gearman_version');
     $requirements['gearman_extension'] = array(
       'title' => $t("Gearman PHP Extension"),
@@ -28,7 +28,7 @@ function islandora_job_requirements($phase) {
       $requirements['gearman_extension']['severity'] = REQUIREMENT_ERROR;
     }
 
-    // Check for the gearman executable in the shell's path
+    // Check for the gearman executable in the shell's path.
     $has_gearman_executable = exec('which gearman');
     $requirements['gearman_executable'] = array(
       'title' => $t("Gearman Shell"),
