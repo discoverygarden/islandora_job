@@ -118,7 +118,7 @@ class IslandoraJobUnitTestCase extends DrupalUnitTestCase {
   public function setUp() {
     parent::setUp('islandora_job');
     module_load_include('inc', 'islandora_job', 'includes/utilities');
-    islandora_job_start_worker(file_directory_temp() . '/worker.pid');
+    islandora_job_start_worker('worker.pid');
   }
 
   /**
@@ -128,7 +128,7 @@ class IslandoraJobUnitTestCase extends DrupalUnitTestCase {
    */
   public function tearDown() {
     module_load_include('inc', 'islandora_job', 'includes/utilities');
-    islandora_job_stop_worker(file_directory_temp() . '/worker.pid');
+    islandora_job_stop_worker('worker.pid');
     parent::tearDown('islandora_job');
   }
 
@@ -192,13 +192,13 @@ class IslandoraJobUnitTestCase extends DrupalUnitTestCase {
     $one_worker_total_time = number_format(microtime(TRUE) - $start, 2);
 
     for ($i = 0; $i < 4; $i++) {
-      islandora_job_start_worker(file_directory_temp() . "/worker.pid.$i");
+      islandora_job_start_worker("worker.pid.$i");
     }
     $start = microtime(TRUE);
     islandora_job_submit_batch($tasks);
     $five_worker_total_time = number_format(microtime(TRUE) - $start, 2);
     for ($i = 0; $i < 4; $i++) {
-      islandora_job_stop_worker(file_directory_temp() . "/worker.pid.$i");
+      islandora_job_stop_worker("worker.pid.$i");
     }
 
     $this->assertTrue($five_worker_total_time < $one_worker_total_time, "Expected: Five workers faster than one. Five workers: $five_worker_total_time sec. One worker: $one_worker_total_time sec.");
