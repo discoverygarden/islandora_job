@@ -110,6 +110,8 @@ islandora_job_stop_worker("worker.pid");    // Reads the process id from worker.
                                             // Requires read access to the pid file.
 ```
 
+If you add a new job by defining a new entry in hook_register_jobs, you’ll need to restart all worker processes for them to listen for the new job type.  This is a side effect of enumerating each job type to the worker functions in bash, but is a small price to pay for the granularity it provides.
+
 Persistent Queue
 ----------------
 By default, the job queue is stored in memory, which is fine for development purposes.  For production environments, you’ll probably want the queue of jobs to survive a crash or system restart. To enable this, you need to pass the `--queue-type` argument to the `gearmand` command to specify which type of persistent store you would like to use.  In addition to the `--queue-type` argument, there are several other optional arguments that must be provided depending on which type of store you choose.  Here are examples for the two database types that Drupal supports.
