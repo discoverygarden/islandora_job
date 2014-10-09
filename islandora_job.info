@@ -1,4 +1,5 @@
 name = Islandora Job
 description = Facilitates asynchronous and parallel processing of Islandora jobs.
-package = Islandora
+package = Islandora Tools
 core = 7.x
+files[] = test/islandora_job.test
