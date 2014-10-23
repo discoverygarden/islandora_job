@@ -22,35 +22,6 @@ function islandora_job_menu() {
 }
 
 /**
- * Implements hook_register_jobs().
- */
-function islandora_job_register_jobs() {
-  $jobs = array(
-    'islandora_job_test_job' => array(
-      'type' => 'test',
-      'module' => 'islandora_job',
-      'name' => 'test/islandora_job',
-    ),
-    'islandora_job_test_job_with_multiple_args' => array(
-      'type' => 'test',
-      'module' => 'islandora_job',
-      'name' => 'test/islandora_job',
-    ),
-    'islandora_job_test_job_with_serialized_obj_arg' => array(
-      'type' => 'test',
-      'module' => 'islandora_job',
-      'name' => 'test/islandora_job',
-    ),
-    'islandora_job_test_long_process' => array(
-      'type' => 'test',
-      'module' => 'islandora_job',
-      'name' => 'test/islandora_job',
-    ),
-  );
-  return $jobs;
-}
-
-/**
  * Runs a job in the foreground.
  *
  * Returns the result of the job to the requesting code. All parameters other

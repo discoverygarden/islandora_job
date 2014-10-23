@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Hooks and API for this module.
+ */
+
+/**
+ * Implements hook_register_jobs().
+ */
+function islandora_test_jobs_register_jobs() {
+  $jobs = array(
+    'islandora_job_test_job' => array(
+      'type' => 'inc',
+      'module' => 'islandora_test_jobs',
+      'name' => 'includes/jobs',
+    ),
+    'islandora_job_test_job_with_multiple_args' => array(
+      'type' => 'inc',
+      'module' => 'islandora_test_jobs',
+      'name' => 'includes/jobs',
+    ),
+    'islandora_job_test_job_with_serialized_obj_arg' => array(
+      'type' => 'inc',
+      'module' => 'islandora_test_jobs',
+      'name' => 'includes/jobs',
+    ),
+    'islandora_job_test_long_process' => array(
+      'type' => 'inc',
+      'module' => 'islandora_test_jobs',
+      'name' => 'includes/jobs',
+    ),
+  );
+  return $jobs;
+}

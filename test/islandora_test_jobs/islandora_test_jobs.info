@@ -1,0 +1,6 @@
+name = Islandora Test Jobs
+description = Holds module implementation for testing Islandora Jobs API.
+core = 7.x
+package = Testing
+hidden = TRUE
+files[] = includes/jobs.inc
