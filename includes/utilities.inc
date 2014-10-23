@@ -33,15 +33,12 @@ function islandora_job_get_client() {
  */
 function islandora_job_format_payload($job_name, $args) {
   array_shift($args);
-  $payload = json_encode(
+  return json_encode(
     array(
       "func" => $job_name,
       "args" => $args,
     )
   );
-  // Don't forget to add 'dem slashes.
-  // Otherwise bash will strip out the quotes.
-  return addslashes($payload);
 }
 
 /**
@@ -66,7 +63,7 @@ function islandora_job_start_worker($pidfile) {
 
   // Start the worker in the background after moving into drupal root.
   // Sanitize and use the specified pid file.
-  $cmd = '(cd ' . DRUPAL_ROOT . ' && gearman -v -w ' . $job_names_string . ' -i ' . escapeshellarg($pidfile) . ' xargs drush islandora-job-router) > /dev/null 2>&1 &';
+  $cmd = '(cd ' . DRUPAL_ROOT . ' && gearman -v -w ' . $job_names_string . ' -i ' . escapeshellarg($pidfile) . ' drush islandora-job-router) > /dev/null 2>&1 &';
   exec($cmd);
   return TRUE;
 }

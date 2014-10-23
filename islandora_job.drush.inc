@@ -20,14 +20,12 @@ function islandora_job_drush_command() {
 /**
  * Routes a payload received from Gearman to the appropriate job function.
  *
- * @param string $payload_str
- *   A string representing a JSON-encoded message containing the function to
- *   execute, the module it comes from, and the arguments to supply it.
+ * Reads STDIN for JSON containing the function to execute, the module it comes
+ * from, and the arguments to supply it.
  */
-function drush_islandora_job_router($payload_str) {
+function drush_islandora_job_router() {
   // Parse the payload into an associative array.
-  $payload = json_decode($payload_str, TRUE);
-
+  $payload = json_decode(stream_get_contents(STDIN), TRUE);
   // Get the list of all available jobs.
   $job_registry = module_invoke_all("register_jobs");
 
