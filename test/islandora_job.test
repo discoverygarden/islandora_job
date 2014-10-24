@@ -106,7 +106,7 @@ class IslandoraJobUnitTestCase extends DrupalUnitTestCase {
     return array(
       'name' => 'Islandora Job',
       'description' => 'Validates the Islandora Job API',
-      'group' => 'Islandora',
+      'group' => 'Islandora Job',
     );
   }
 

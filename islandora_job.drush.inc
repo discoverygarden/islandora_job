@@ -27,7 +27,7 @@ function drush_islandora_job_router() {
   // Parse the payload into an associative array.
   $payload = json_decode(stream_get_contents(STDIN), TRUE);
   // Get the list of all available jobs.
-  $job_registry = module_invoke_all("register_jobs");
+  $job_registry = module_invoke_all("islandora_job_register_jobs");
 
   $func_name = $payload['func'];
   $args = $payload['args'];

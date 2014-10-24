@@ -57,7 +57,7 @@ function islandora_job_start_worker($pidfile) {
 
   // Get the list of all available jobs to run the router for.
   // Be sure to sanitize them.  No funny business, mister!
-  $job_registry = module_invoke_all("register_jobs");
+  $job_registry = module_invoke_all("islandora_job_register_jobs");
   $job_names = array_map("escapeshellarg", array_keys($job_registry));
   $job_names_string = '-f ' . implode(' -f ', $job_names);
 
