@@ -17,4 +17,11 @@
  *     the extension.
  */
 function hook_islandora_job_register_jobs() {
+  return array(
+    'islandora_job_test_job' => array(
+      'type' => 'test',
+      'module' => 'islandora_job',
+      'name' => 'test/islandora_job',
+    ),
+  );
 }
