@@ -63,7 +63,7 @@ function islandora_job_start_worker($pidfile) {
 
   // Start the worker in the background after moving into drupal root.
   // Sanitize and use the specified pid file.
-  $cmd = '(cd ' . DRUPAL_ROOT . ' && gearman -v -w ' . $job_names_string . ' -i ' . escapeshellarg($pidfile) . ' drush islandora-job-router) > /dev/null 2>&1 &';
+  $cmd = '(cd ' . DRUPAL_ROOT . ' && gearman -v -w ' . $job_names_string . ' -i ' . escapeshellarg($pidfile) . ' drush -u 1 islandora-job-router) > /dev/null 2>&1 &';
   exec($cmd);
   return TRUE;
 }

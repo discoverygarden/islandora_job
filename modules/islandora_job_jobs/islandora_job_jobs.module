@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Main hooks for islandora_job_jobs.
+ */
+
+/**
+ * Implements hook_islandora_job_register_jobs().
+ */
+function islandora_job_jobs_islandora_job_register_jobs() {
+  return array(
+    'islandora_job_jobs_islandora_do_derivatives' => array(
+      'type' => 'inc',
+      'module' => 'islandora_job_jobs',
+      'name' => 'includes/wrappers',
+    ),
+  );
+}
