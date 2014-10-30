@@ -55,6 +55,19 @@ function islandora_job_start_worker($pidfile) {
   // Look in the tmp directory for the pidfile.
   $pidfile = file_directory_temp() . "/$pidfile";
 
+  // When needed, this'll have to work on other platforms...
+  // If the pidfile exists, exit early if the process is running.
+  // Otherwise, ditch the pidfile if it's stale.
+  if (file_exists($pidfile)) {
+    $pid = trim(file_get_contents($pidfile));
+    if (file_exists("/proc/$pid")) {
+      return FALSE;
+    }
+    else {
+      unlink($pidfile);
+    }
+  }
+
   // Get the list of all available jobs to run the router for.
   // Be sure to sanitize them.  No funny business, mister!
   $job_registry = module_invoke_all("islandora_job_register_jobs");
@@ -82,6 +95,7 @@ function islandora_job_stop_worker($pidfile) {
   $pidfile = file_directory_temp() . "/$pidfile";
 
   // When needed, this'll have to work on other platforms...
+  // Kill the process whose id is in the pidfile.
   if (file_exists($pidfile)) {
     $pid = trim(file_get_contents($pidfile));
     if (file_exists("/proc/$pid")) {

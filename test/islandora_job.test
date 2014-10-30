@@ -97,6 +97,8 @@ class SerializationTestObject {
  */
 class IslandoraJobUnitTestCase extends DrupalUnitTestCase {
 
+  const PIDFILE = "worker.pid";
+
   /**
    * Provides a description of these tests.
    *
@@ -118,7 +120,7 @@ class IslandoraJobUnitTestCase extends DrupalUnitTestCase {
   public function setUp() {
     parent::setUp('islandora_job');
     module_load_include('inc', 'islandora_job', 'includes/utilities');
-    islandora_job_start_worker('worker.pid');
+    islandora_job_start_worker(self::PIDFILE);
   }
 
   /**
@@ -128,7 +130,7 @@ class IslandoraJobUnitTestCase extends DrupalUnitTestCase {
    */
   public function tearDown() {
     module_load_include('inc', 'islandora_job', 'includes/utilities');
-    islandora_job_stop_worker('worker.pid');
+    islandora_job_stop_worker(self::PIDFILE);
     parent::tearDown('islandora_job');
   }
 
@@ -192,13 +194,13 @@ class IslandoraJobUnitTestCase extends DrupalUnitTestCase {
     $one_worker_total_time = number_format(microtime(TRUE) - $start, 2);
 
     for ($i = 0; $i < 4; $i++) {
-      islandora_job_start_worker("worker.pid.$i");
+      islandora_job_start_worker(self::PIDFILE . ".$i");
     }
     $start = microtime(TRUE);
     islandora_job_submit_batch($tasks);
     $five_worker_total_time = number_format(microtime(TRUE) - $start, 2);
     for ($i = 0; $i < 4; $i++) {
-      islandora_job_stop_worker("worker.pid.$i");
+      islandora_job_stop_worker(self::PIDFILE . ".$i");
     }
 
     $this->assertTrue($five_worker_total_time < $one_worker_total_time, "Expected: Five workers faster than one. Five workers: $five_worker_total_time sec. One worker: $one_worker_total_time sec.");
