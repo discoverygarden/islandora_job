@@ -45,7 +45,7 @@ function islandora_job_format_payload($job_name, $args) {
  * Starts a worker function, respecting or creating the specified pid file.
  *
  * @param string $pidfile
- *   The pidfile to create (or respect)
+ *   The base file name of the pidfile to create (or respect).
  *
  * @return bool
  *   TRUE if the process started and a pidfile was created.  FALSE if the
@@ -55,12 +55,13 @@ function islandora_job_start_worker($pidfile) {
   // Look in the tmp directory for the pidfile.
   $pidfile = file_directory_temp() . "/$pidfile";
 
-  // When needed, this'll have to work on other platforms...
+  // We have to manage starting workers because gearman doesn't respect its
+  // pidfiles. When needed, this'll have to work on other platforms.
   // If the pidfile exists, exit early if the process is running.
   // Otherwise, ditch the pidfile if it's stale.
   if (file_exists($pidfile)) {
     $pid = trim(file_get_contents($pidfile));
-    if (file_exists("/proc/$pid")) {
+    if (posix_getpgid($pid)) {
       return FALSE;
     }
     else {
@@ -85,7 +86,7 @@ function islandora_job_start_worker($pidfile) {
  * Stops the worker process identified by the specified pid file.
  *
  * @param string $pidfile
- *   The file containing the process id to kill
+ *   The base file name of the file containing the process id to kill.
  *
  * @return bool
  *   TRUE if the process was killed.  FALSE otherwise.
@@ -99,7 +100,7 @@ function islandora_job_stop_worker($pidfile) {
   if (file_exists($pidfile)) {
     $pid = trim(file_get_contents($pidfile));
     if (file_exists("/proc/$pid")) {
-      exec('kill -TERM `cat ' . escapeshellarg($pidfile) . '`');
+      exec('kill -TERM ' . escapeshellarg($pid));
       unlink($pidfile);
       return TRUE;
     }
