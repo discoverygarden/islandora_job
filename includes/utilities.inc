@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Smattering of utility functions for the islandora_job module.
+ * Utility functions for the islandora_job module.
  */
 
 /**
@@ -69,16 +69,20 @@ function islandora_job_start_worker($pidfile) {
     }
   }
 
-  // Get the list of all available jobs to run the router for.
-  // Be sure to sanitize them.  No funny business, mister!
+  // Register the worker for all jobs.
+  // @todo: allow finer granularity.
   $job_registry = module_invoke_all("islandora_job_register_jobs");
   $job_names = array_map("escapeshellarg", array_keys($job_registry));
   $job_names_string = '-f ' . implode(' -f ', $job_names);
 
   // Start the worker in the background after moving into drupal root.
   // Sanitize and use the specified pid file.
-  $cmd = '(cd ' . DRUPAL_ROOT . ' && gearman -v -w ' . $job_names_string . ' -i ' . escapeshellarg($pidfile) . ' drush -u 1 islandora-job-router) > /dev/null 2>&1 &';
-  exec($cmd);
+  $drupal_root = DRUPAL_ROOT;
+  $escaped_pid_file = escapeshellarg($pidfile);
+  $host = variable_get('islandora_job_server_host', 'localhost');
+  $port = variable_get('islandora_job_server_port', 4730);
+  exec("(cd $drupal_root && gearman -v -h $host -p $port -w $job_names_string -i $escaped_pid_file drush -u 1 islandora-job-router) > /dev/null 2>&1 &");
+
   return TRUE;
 }
 
@@ -92,6 +96,7 @@ function islandora_job_start_worker($pidfile) {
  *   TRUE if the process was killed.  FALSE otherwise.
  */
 function islandora_job_stop_worker($pidfile) {
+  drush_print($pidfile);
   // Look in the tmp directory for the pidfile.
   $pidfile = file_directory_temp() . "/$pidfile";
 

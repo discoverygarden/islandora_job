@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Main hook implementations.
+ */
+
+/**
+ * Implements hook_islandora_object_ingested().
+ */
+function islandora_job_derivatives_islandora_object_ingested(AbstractObject $object) {
+  islandora_job_submit_background('islandora_job_jobs_islandora_do_derivatives', serialize($object), array());
+}

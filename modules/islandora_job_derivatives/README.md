@@ -1,8 +1,8 @@
-# Islandora Job Jobs
+# Islandora Job Derivatives
 
 ## Introduction
 
-Re-usable job declarations for islandora_job.
+Sends ingest derivatives to Islandora Job. In the future could do all derivatives.
 
 ## Installation
 
