@@ -20,7 +20,7 @@ Current maintainers:
 
 This project has been sponsored by:
 
-* [discoverygarden](http://wwww.discoverygarden.ca)
+* [discoverygarden](http://www.discoverygarden.ca)
 
 ## Development
 
