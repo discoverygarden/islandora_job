@@ -16,5 +16,12 @@ function islandora_job_jobs_islandora_do_derivatives($object_in, array $options 
   // string value (which should be its PID), to load it properly, to avoid any
   // potential issues.
   $object = islandora_object_load("$object_in");
-  return islandora_do_derivatives($object, $options);
+  $re_add = islandora_get_defer_derivatives_flag($object);
+  islandora_remove_defer_derivatives_flag($object);
+
+  $result = islandora_do_derivatives($object, $options);
+  if ($re_add) {
+    islandora_set_defer_derivatives_flag($object);
+  }
+  return $result;
 }
