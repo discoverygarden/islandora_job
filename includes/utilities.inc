@@ -81,7 +81,7 @@ function islandora_job_start_worker($pidfile) {
   $escaped_pid_file = escapeshellarg($pidfile);
   $host = variable_get('islandora_job_server_host', 'localhost');
   $port = variable_get('islandora_job_server_port', 4730);
-  exec("(cd $drupal_root && gearman -v -h $host -p $port -w $job_names_string -i $escaped_pid_file drush -u 1 islandora-job-router) > /dev/null 2>&1 &");
+  exec("(cd $drupal_root && gearman -v -h $host -p $port -w $job_names_string -i $escaped_pid_file -- drush -u 1 islandora-job-router) > /dev/null 2>&1 &");
 
   return TRUE;
 }
