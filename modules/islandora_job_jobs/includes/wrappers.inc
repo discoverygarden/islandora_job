@@ -26,6 +26,11 @@ function islandora_job_jobs_islandora_do_derivatives($object_in, array $options 
   islandora_remove_defer_derivatives_flag($object);
 
   $result = islandora_do_derivatives($object, $options);
+  $batch = &batch_get();
+  if (!empty($batch)) {
+    drush_backend_batch_process();
+  }
+  
   if ($re_add) {
     islandora_set_defer_derivatives_flag($object);
   }
