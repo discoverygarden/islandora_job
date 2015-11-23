@@ -20,6 +20,11 @@ function islandora_job_jobs_islandora_do_derivatives($object_in, array $options 
   $object_id = islandora_is_valid_pid($object_in) ?
     $object_in :
     strval(unserialize($object_in));
+  // XXX: Due to how Drush bootstrapping works, the connection may be created
+  // without credentials (when your site's front page is
+  // 'islandora/object/some:object', for example). Resetting to ensure a new
+  // connection gets created should fix it.
+  drupal_static_reset('islandora_get_tuque_connection');
   $object = islandora_object_load($object_id);
 
   $re_add = islandora_get_defer_derivatives_flag($object);
