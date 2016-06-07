@@ -17,3 +17,43 @@ function islandora_job_jobs_islandora_job_register_jobs() {
     ),
   );
 }
+
+/**
+ * Implements hook_form_islandora_job_admin_form_alter().
+ */
+function islandora_job_jobs_form_islandora_job_admin_form_alter(&$form, &$form_state) {
+  form_load_include($form_state, 'inc', 'islandora_job_jobs', 'includes/utilities');
+  $form['islandora_job_jobs_derivatives_idle_wait'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Derivative idle time'),
+    '#description' => t('An amount of time in seconds required to pass before being handled by Gearman. Set to 0 to disable.'),
+    '#default_value' => variable_get('islandora_job_jobs_derivatives_idle_wait', '10'),
+    '#required' => TRUE,
+    '#element_validate' => array(
+      'islandora_job_jobs_element_validate_integer_positive_or_zero',
+    ),
+  );
+  $form['islandora_job_jobs_derivative_requeues'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Derivative requeues'),
+    '#description' => t('After the object has been requeued this many times, we will force it to be processed.'),
+    '#default_value' => variable_get('islandora_job_jobs_derivative_requeues', 3),
+    '#element_validate' => array(
+      'element_validate_integer_positive',
+    ),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="islandora_job_jobs_derivatives_idle_wait"]' => array(
+          '!value' => '0',
+        ),
+      ),
+      'required' => array(
+        ':input[name="islandora_job_jobs_derivatives_idle_wait"]' => array(
+          '!value' => '0',
+        ),
+      ),
+    ),
+  );
+  $form['#validate'][] = 'islandora_job_jobs_islandora_job_admin_form_validate';
+  return $form;
+}
