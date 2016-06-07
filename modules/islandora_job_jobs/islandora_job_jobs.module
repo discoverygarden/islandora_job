@@ -33,6 +33,11 @@ function islandora_job_jobs_form_islandora_job_admin_form_alter(&$form, &$form_s
       'islandora_job_jobs_element_validate_integer_positive_or_zero',
     ),
   );
+  $conditions = array(
+    ':input[name="islandora_job_jobs_derivatives_idle_wait"]' => array(
+      '!value' => '0',
+    ),
+  );
   $form['islandora_job_jobs_derivative_requeues'] = array(
     '#type' => 'textfield',
     '#title' => t('Derivative requeues'),
@@ -42,16 +47,8 @@ function islandora_job_jobs_form_islandora_job_admin_form_alter(&$form, &$form_s
       'element_validate_integer_positive',
     ),
     '#states' => array(
-      'visible' => array(
-        ':input[name="islandora_job_jobs_derivatives_idle_wait"]' => array(
-          '!value' => '0',
-        ),
-      ),
-      'required' => array(
-        ':input[name="islandora_job_jobs_derivatives_idle_wait"]' => array(
-          '!value' => '0',
-        ),
-      ),
+      'visible' => $conditions,
+      'required' => $conditions,
     ),
   );
   $form['#validate'][] = 'islandora_job_jobs_islandora_job_admin_form_validate';
