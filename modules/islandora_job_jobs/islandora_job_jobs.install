@@ -1,0 +1,16 @@
+<?php
+/**
+ * @file
+ * Various (un)installation hooks.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function islandora_job_jobs_uninstall() {
+  $variables = array(
+    'islandora_job_jobs_derivatives_idle_wait',
+    'islandora_job_jobs_derivative_requeues',
+  );
+  array_map('variable_del', $variables);
+}
