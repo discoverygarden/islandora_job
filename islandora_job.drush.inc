@@ -60,6 +60,11 @@ function drush_islandora_job_count_managed_workers() {
  * from, and the arguments to supply it.
  */
 function drush_islandora_job_router() {
+  // XXX: Due to how Drush bootstrapping works, the connection may be created
+  // without credentials (when your site's front page is
+  // 'islandora/object/some:object', for example). Resetting to ensure a new
+  // connection gets created should fix it.
+  drupal_static_reset('islandora_get_tuque_connection');
   // Parse the payload into an associative array.
   $payload = json_decode(stream_get_contents(STDIN), TRUE);
   // Get the list of all available jobs.
