@@ -1,21 +1,56 @@
-Islandora Job
-=============
+# Islandora Job
 
 Drupal module to facilitate asynchronous and parallel processing of Islandora jobs.  Allows for Drupal modules to register worker functions and routes messages received from a job server to said functions.
 
-Requirements
-------------
+## Requirements
 - A functioning Gearman installation, access to the gearman shell command, and the Gearman PHP extension.
 
-Installation
-------------
-- Install Gearman
-- Install Gearman PHP Extension
-- Download and install like any other drupal module.
+## Install Gearman Server (Ubuntu 14.04)
+- `apt-get install libgearman-dev gearman-job-server gearman-tools`
+- In your favorite text editor update the parameters to be passed to Gearman in ` /etc/default/gearman-job-server`. In this example Gearman manages itself on a local database as outlined [below](#persistent-database-queue).
+     * `PARAMS="--listen=127.0.0.1 --queue-type=MySQL --mysql-host=localhost --mysql-port=3306 --mysql-user=$DRUPAL_USERNAME --mysql-password=$DRUPAL_PASSWORD --mysql-db=$DRUPAL_DB --mysql-table=gearman_queue"`
+- Add an [override](http://upstart.ubuntu.com/cookbook/) in `/etc/init/gearman-job-server.override` such that Gearman starts and stops accordingly.
 
-Usage
------
-This module aims to be as simple and ‘drupal-y’ as possible.  To register a function as a job, your module must implement `hook_register_job()`.  This hook must return an array whose keys are the names of the functions you want to be jobs, and whose values are an associative array modeled after the input to `module_load_include`.
+  ```bash
+   ############################
+   # -*- upstart -*-
+   # Upstart configuration script for "gearman-job-server".
+   description "gearman job control server"
+   start on (filesystem and net-device-up IFACE=lo)
+   stop on runlevel [!2345]
+   respawn
+   # gearman-job-server need to talk to the DB.
+   start on started mysql
+   stop on stopping mysql
+   # exec start-stop-daemon --start --chuid gearman --exec /usr/sbin/gearmand -- --log-file=/var/log/gearman-job-server/gearman.log
+   # PATCH: https://bugs.launchpad.net/ubuntu/+source/gearmand/+bug/1260830
+   script
+   . /etc/default/gearman-job-server
+   exec start-stop-daemon --start --chuid gearman --exec /usr/sbin/gearmand -- $PARAMS --log-file=/var/log/gearman-job-server/gearman.log
+   end script
+   ############################
+   ```
+- Follow the instructions to install the [gearman-init](https://github.com/discoverygarden/gearman-init) upstart script to manage workers.
+
+## Install Gearman PHP Extension
+- Install the Gearman PHP extension via PECL
+  * `/usr/bin/pecl install gearman`
+- Make the extension available for use by PHP
+  * `echo extension=gearman.so >> /etc/php5/mods-available/gearman.ini`
+- Enable the Gearman PHP library.
+  * In PHP versions > 5.4 you can use `php5enmod`
+    *  `php5enmod gearman`
+  * Otherwise, do the following
+    * `ln -s /etc/php5/mods-available/gearman.ini /etc/php5/apache2/conf.d/20-gearman.ini`
+    * `ln -s /etc/php5/mods-available/gearman.ini /etc/php5/cli/conf.d/20-gearman.ini`
+- Restart the webserver
+  * `service apache2 restart`
+
+Download and install the Islandora Job module like any other Drupal module.
+
+## Usage
+
+This module aims to be as simple and ‘Drupal-y’ as possible.  To register a function as a job, your module must implement `hook_register_job()`.  This hook must return an array whose keys are the names of the functions you want to be jobs, and whose values are an associative array modeled after the input to `module_load_include`.
 
 For example, in your .module file:
 ```php
@@ -97,8 +132,10 @@ $batch = array(
 islandora_job_submit_batch($batch);  // Returns TRUE
 ```
 
-Starting and Stopping Workers
------------------------------
+Note: Registering new jobs requires that the Gearman workers be restarted.
+
+## Starting and Stopping Workers
+
 Workers are started and stopped programatically.  This is required so that all available jobs from hook_register_jobs() are passed to the workers on startup.  If you define a new job by adding a new entry to your module’s implementation of hook_register_jobs(), you’ll have to restart all workers for the changes to take effect.
 
 Note that both the start and stop functions take the name of a pidfile (no paths, just a name), and will respect it when starting/stopping a worker.  You just have to make sure that the apache user has permission to write files to the temporary directory defined in Drupal configuration, because this is where the module will attempt to place the pid file. 
@@ -126,11 +163,11 @@ ps ax | grep " [g]earman " | wc -l
 
 Ideally, if you need to stop all your workers, you’d iterate over your pidfiles and call islandora_job_stop_worker() for each.  Sometimes, though, you just wanna kill ‘em all in one fell swoop.  Although it is not advised since it will leave pidfiles dangling in the drupal temp directory, you can do so in bash with:
 ```bash
-kill `ps ax | grep " [g]earman " | awk '{ print $1 }'`
+service gearman-workers stop
 ```
 
-Persistent Queue
-----------------
+## Persistent Database Queue
+
 By default, the job queue is stored in memory, which is fine for development purposes.  For production environments, you’ll probably want the queue of jobs to survive a crash or system restart. To enable this, you need to pass the `--queue-type` argument to the `gearmand` command to specify which type of persistent store you would like to use.  In addition to the `--queue-type` argument, there are several other optional arguments that must be provided depending on which type of store you choose.  Here are examples for the two database types that Drupal supports.
 
 For MySQL (available since 0.34), edit /etc/default/gearman-job-server and add the following arguments to the PARAMS variable:
@@ -155,8 +192,8 @@ Of course, you’ll have to restart the server for these changes to take effect.
 sudo service restart gearman-job-server
 ```
 
-How many jobs are left?
------------------------
+## How many jobs are left?
+
 You can determine how many job are left by issuing a query to the database table defined in the `gearmand` args.
 
 ```sql
@@ -165,8 +202,8 @@ SELECT function_name, COUNT(function_name) FROM gearman_queue GROUP BY function_
 
 This, of course, assumes you are using a database for persistence.
 
-Clearing the job queue
-----------------------
+## Clearing the job queue
+
 Let's face it, at some point in time you're going to screw something up and flood the job server with a bunch of jobs that are going to error 'til the cows come home.  You can use SQL to delete jobs from the queue table, or just truncate the table entirely.
 
 ```sql
@@ -182,6 +219,6 @@ This, of course, assumes you are using a database for persistence.  If you like 
 sudo service restart gearman-job-server
 ```
 
-Accepting Remote Connections
-----------------------------
+## Accepting Remote Connections
+
 By the defaults defined in /etc/default/gearman-job-server, Gearman will only accept connections from localhost.  If you want to allow connections from other computers,  change the `--listen` argument to include your whitelisted ip in the defaults file.
