@@ -132,39 +132,9 @@ $batch = array(
 islandora_job_submit_batch($batch);  // Returns TRUE
 ```
 
-Note: Registering new jobs requires that the Gearman workers be restarted.
-
 ## Starting and Stopping Workers
 
-Workers are started and stopped programatically.  This is required so that all available jobs from hook_register_jobs() are passed to the workers on startup.  If you define a new job by adding a new entry to your module’s implementation of hook_register_jobs(), you’ll have to restart all workers for the changes to take effect.
-
-Note that both the start and stop functions take the name of a pidfile (no paths, just a name), and will respect it when starting/stopping a worker.  You just have to make sure that the apache user has permission to write files to the temporary directory defined in Drupal configuration, because this is where the module will attempt to place the pid file. 
-
-```php
-module_load_include('inc', 'islandora_job', 'includes/utilities');
-
-islandora_job_start_worker("worker.pid");   // Starts a worker and puts its process in /tmp/worker.pid
-                                            // or wherever else you've defined the temporary directory for Drupal to be.
-                                            // Requires write access to the temporary directory and to the pidfile if it already exists.
-
-islandora_job_stop_worker("worker.pid");    // Reads the process id from worker.pid and uses it to kill the worker.
-                                            // Requires read access to the pid file.
-```
-
-In bash, to check to see if any workers are running:
-```bash
-ps ax | grep " [g]earman "
-```
-
-Similarly, to count the number of running workers:
-```bash
-ps ax | grep " [g]earman " | wc -l
-```
-
-Ideally, if you need to stop all your workers, you’d iterate over your pidfiles and call islandora_job_stop_worker() for each.  Sometimes, though, you just wanna kill ‘em all in one fell swoop.  Although it is not advised since it will leave pidfiles dangling in the drupal temp directory, you can do so in bash with:
-```bash
-service gearman-workers stop
-```
+Workers are started and stopped via upstart. If you define a new job by adding a new entry to your module’s implementation of hook_register_jobs(), you’ll have to restart all workers for the jobs to become registered and available for the workers.
 
 ## Persistent Database Queue
 
