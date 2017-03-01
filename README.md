@@ -50,7 +50,8 @@ Download and install the Islandora Job module like any other Drupal module.
 
 ## Usage
 
-This module aims to be as simple and ‘Drupal-y’ as possible.  To register a function as a job, your module must implement `hook_register_job()`.  This hook must return an array whose keys are the names of the functions you want to be jobs, and whose values are an associative array modeled after the input to `module_load_include`.
+This module aims to be as simple and ‘Drupal-y’ as possible.  To register a function as a job, your module must implement `hook_register_job()`.  This hook must return an array whose keys are the names of the functions you want to be jobs, and whose values are an associative array modeled after the input to `module_load_include`. If you define a new job or enable a module that implements jobs, you’ll have to restart all workers for the jobs to be processed.
+
 
 For example, in your .module file:
 ```php
@@ -134,7 +135,7 @@ islandora_job_submit_batch($batch);  // Returns TRUE
 
 ## Starting and Stopping Workers
 
-Workers are started and stopped via system services such as those implemented in [gearman-init](https://github.com/discoverygarden/gearman-init). If you define a new job by adding a new entry to your module’s implementation of hook_register_jobs(), you’ll have to restart all workers for the jobs to become registered and available for the workers.
+Workers are started and stopped via system services such as those implemented in [gearman-init](https://github.com/discoverygarden/gearman-init).
 
 ## Persistent Database Queue
 
