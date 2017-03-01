@@ -30,7 +30,7 @@ Drupal module to facilitate asynchronous and parallel processing of Islandora jo
    end script
    ############################
    ```
-- Follow the instructions to install the [gearman-init](https://github.com/discoverygarden/gearman-init) upstart script to manage workers.
+- Follow the instructions to install the [gearman-init](https://github.com/discoverygarden/gearman-init) system service scripts to manage workers.
 
 ## Install Gearman PHP Extension
 - Install the Gearman PHP extension via PECL
@@ -134,7 +134,7 @@ islandora_job_submit_batch($batch);  // Returns TRUE
 
 ## Starting and Stopping Workers
 
-Workers are started and stopped via upstart. If you define a new job by adding a new entry to your module’s implementation of hook_register_jobs(), you’ll have to restart all workers for the jobs to become registered and available for the workers.
+Workers are started and stopped via system services such as those implemented in [gearman-init](https://github.com/discoverygarden/gearman-init). If you define a new job by adding a new entry to your module’s implementation of hook_register_jobs(), you’ll have to restart all workers for the jobs to become registered and available for the workers.
 
 ## Persistent Database Queue
 
