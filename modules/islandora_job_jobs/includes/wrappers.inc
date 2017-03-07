@@ -26,7 +26,9 @@ function islandora_job_jobs_islandora_do_derivatives($object_in, array $options 
   // connection gets created should fix it.
   drupal_static_reset('islandora_get_tuque_connection');
   $object = islandora_object_load($object_id);
-
+  if (!$object) {
+    return;
+  }
   $time = variable_get('islandora_job_jobs_derivatives_idle_wait', '10');
   if ($time > 0) {
     $diff = time() - $object->lastModifiedDate->getTimestamp();
