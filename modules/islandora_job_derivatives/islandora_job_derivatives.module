@@ -24,6 +24,7 @@ function islandora_job_derivatives_islandora_object_ingested(AbstractObject $obj
  *   Id of the datastream.
  */
 function islandora_job_derivatives_islandora_datastream_ingested(AbstractObject $object, AbstractDatastream $datastream) {
+  module_load_include('inc', 'islandora', 'includes/derivatives');
   $trace = debug_backtrace();
   foreach ($trace as $trace_frame) {
     if (isset($trace_frame['function']) && $trace_frame['function'] == 'ingestObject') {
