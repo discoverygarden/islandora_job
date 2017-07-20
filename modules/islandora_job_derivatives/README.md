@@ -10,7 +10,11 @@ Install as usual, see [this](https://drupal.org/documentation/install/modules-th
 
 ## Troubleshooting/Issues
 
-There is a technical limitation: this module can’t handle transitive derivatives on objects other than the one that initiated the derivative chain.
+There is a technical limitation: this module can’t handle transitive
+derivatives on objects other than the one that initiated the derivative chain.
+For instance paged content aggregate PDF and OCR datastreams. There are UI
+options to prevent these derivatives during ingest and manually run them.
+
 Having problems or solved a problem? Contact [discoverygarden](http://support.discoverygarden.ca).
 
 ## Maintainers/Sponsors
