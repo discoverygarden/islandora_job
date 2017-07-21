@@ -35,7 +35,7 @@ function islandora_job_function_name($job_name) {
   // Chop the 'sites/' part of the path off. This gives you the name of the
   // site dir for the multisite, for example sites/example would be example
   // we use this to create the queue for this multisite.
-  $site = substr(conf_path(),6);
+  $site = substr(conf_path(), 6);
   return $site == 'default' ? $job_name : "{$site}_{$job_name}";
 }
 
