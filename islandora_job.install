@@ -39,7 +39,7 @@ function islandora_job_requirements($phase) {
     }
     else {
       $requirements['gearman_executable']['description'] = $t("Gearman executable is not in PATH.");
-      $requirements['gearman_executable']['severity'] = REQUIREMENT_ERROR;
+      $requirements['gearman_executable']['severity'] = REQUIREMENT_INFO;
     }
   }
 
