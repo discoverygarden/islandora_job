@@ -12,6 +12,9 @@ define('ISLANDORA_JOB_MANAGED_WORKER_PIDFILE_BASE', 'islandora_job_managed_worke
  * Start a managed worker.
  */
 function islandora_job_start_managed_worker() {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $message = islandora_deprecated('7.x-1.10', t('Please use gearman-init instead.'));
+  trigger_error(filter_xss($message), E_USER_DEPRECATED);
   module_load_include('inc', 'islandora_job', 'includes/utilities');
 
   $worker = islandora_job_count_managed_workers() + 1;
@@ -24,6 +27,9 @@ function islandora_job_start_managed_worker() {
  * Stop all managed workers.
  */
 function islandora_job_stop_managed_workers() {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $message = islandora_deprecated('7.x-1.10', t('Please use gearman-init instead.'));
+  trigger_error(filter_xss($message), E_USER_DEPRECATED);
   module_load_include('inc', 'islandora_job', 'includes/utilities');
 
   $number_of_workers = islandora_job_count_managed_workers();
@@ -38,6 +44,9 @@ function islandora_job_stop_managed_workers() {
  * Gets a pid file for a worker number.
  */
 function islandora_job_get_managed_worker_pid_file($number) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $message = islandora_deprecated('7.x-1.10', t('Please use gearman-init instead.'));
+  trigger_error(filter_xss($message), E_USER_DEPRECATED);
   $file_base = ISLANDORA_JOB_MANAGED_WORKER_PIDFILE_BASE;
   return "{$file_base}_$number";
 }
@@ -46,6 +55,9 @@ function islandora_job_get_managed_worker_pid_file($number) {
  * Count all managed workers.
  */
 function islandora_job_count_managed_workers() {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $message = islandora_deprecated('7.x-1.10', t('Please use gearman-init instead.'));
+  trigger_error(filter_xss($message), E_USER_DEPRECATED);
   module_load_include('inc', 'islandora_job', 'includes/utilities');
 
   $file_base = ISLANDORA_JOB_MANAGED_WORKER_PIDFILE_BASE;

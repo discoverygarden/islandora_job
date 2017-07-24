@@ -33,6 +33,9 @@ function islandora_job_drush_command() {
  * Start a managed worker command.
  */
 function drush_islandora_job_start_managed_worker() {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $message = islandora_deprecated('7.x-1.10', t('Please use gearman-init instead.'));
+  trigger_error(filter_xss($message), E_USER_DEPRECATED);
   module_load_include('inc', 'islandora_job', 'includes/managed_workers');
   islandora_job_start_managed_worker();
 }
@@ -41,6 +44,9 @@ function drush_islandora_job_start_managed_worker() {
  * Stop all managed workers command.
  */
 function drush_islandora_job_stop_managed_workers() {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $message = islandora_deprecated('7.x-1.10', t('Please use gearman-init instead.'));
+  trigger_error(filter_xss($message), E_USER_DEPRECATED);
   module_load_include('inc', 'islandora_job', 'includes/managed_workers');
   islandora_job_stop_managed_workers();
 }
@@ -49,6 +55,9 @@ function drush_islandora_job_stop_managed_workers() {
  * Count all managed workers command.
  */
 function drush_islandora_job_count_managed_workers() {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $message = islandora_deprecated('7.x-1.10', t('Please use gearman-init instead.'));
+  trigger_error(filter_xss($message), E_USER_DEPRECATED);
   module_load_include('inc', 'islandora_job', 'includes/managed_workers');
   drush_print(islandora_job_count_managed_workers());
 }

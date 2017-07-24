@@ -52,6 +52,9 @@ function islandora_job_format_payload($job_name, $args) {
  *   pidfile exists and its process is still running.
  */
 function islandora_job_start_worker($pidfile) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $message = islandora_deprecated('7.x-1.10', t('Please use gearman-init instead.'));
+  trigger_error(filter_xss($message), E_USER_DEPRECATED);
   // Look in the tmp directory for the pidfile.
   $pidfile = file_directory_temp() . "/$pidfile";
 
@@ -96,6 +99,9 @@ function islandora_job_start_worker($pidfile) {
  *   TRUE if the process was killed.  FALSE otherwise.
  */
 function islandora_job_stop_worker($pidfile) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $message = islandora_deprecated('7.x-1.10', t('Please use gearman-init instead.'));
+  trigger_error(filter_xss($message), E_USER_DEPRECATED);
   drush_print($pidfile);
   // Look in the tmp directory for the pidfile.
   $pidfile = file_directory_temp() . "/$pidfile";
