@@ -36,7 +36,13 @@ function islandora_job_function_name($job_name) {
   // site dir for the multisite, for example sites/example would be example
   // we use this to create the queue for this multisite.
   $site = substr(conf_path(), 6);
-  return $site == 'default' ? $job_name : "{$site}_{$job_name}";
+
+  if ($site == 'default' || !variable_get('islandora_job_multisite_prefix', FALSE)) {
+    return $job_name;
+  }
+  else {
+    return "{$site}_{$job_name}";
+  }
 }
 
 /**
