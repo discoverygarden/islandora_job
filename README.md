@@ -133,6 +133,10 @@ $batch = array(
 islandora_job_submit_batch($batch);  // Returns TRUE
 ```
 
+For jobs that may require individual multisite workers, job function names should be washed through `islandora_job_function_name()`, which applies multisite names to job function names as a prefix, e.g., `my_module_hello_world` on sites/default would go into the queue unchanged, whereas on sites/this.site, it would become `this.site_my_module_hello_world`. This allows different workers to handle and route queue items to different sites based on the prefix without having to maintain multiple gearmand instances and queue tables.
+
+Individual multisites can opt out of prefixing if they feel it is necessary using the "Add a multisite prefix to job queue name" checkbox at admin/islandora/tools/job.
+
 ## Starting and Stopping Workers
 
 Workers are started and stopped via system services such as those implemented in [gearman-init](https://github.com/discoverygarden/gearman-init).
