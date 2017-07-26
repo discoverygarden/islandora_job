@@ -20,6 +20,32 @@ function islandora_job_get_client() {
 }
 
 /**
+ * Get job function name.
+ *
+ * This function allows support for multisites by adding the site
+ * name to each job function.
+ *
+ * @param string $job_name
+ *   Name of the job without site.
+ *
+ * @return string
+ *   Job name with site added.
+ */
+function islandora_job_function_name($job_name) {
+  // Chop the 'sites/' part of the path off. This gives you the name of the
+  // site dir for the multisite, for example sites/example would be example
+  // we use this to create the queue for this multisite.
+  $site = substr(conf_path(), 6);
+
+  if ($site == 'default' || !variable_get('islandora_job_multisite_prefix', FALSE)) {
+    return $job_name;
+  }
+  else {
+    return "{$site}_{$job_name}";
+  }
+}
+
+/**
  * Constructs a payload from arguments passed to various API functions.
  *
  * @param string $job_name
@@ -32,11 +58,15 @@ function islandora_job_get_client() {
  *   A JSON encoded payload for Gearman.
  */
 function islandora_job_format_payload($job_name, $args) {
+  global $user;
+  global $base_url;
   array_shift($args);
   return json_encode(
     array(
       "func" => $job_name,
       "args" => $args,
+      "site" => $base_url,
+      "uid" => $user->uid,
     )
   );
 }

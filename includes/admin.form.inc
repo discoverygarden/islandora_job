@@ -28,5 +28,11 @@ function islandora_job_admin_form($form, &$form_state) {
     '#required' => TRUE,
     '#default_value' => variable_get('islandora_job_server_port', 4730),
   );
+  $form['islandora_job_multisite_prefix'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable multisite prefix'),
+    '#description' => t('Add a multisite prefix to job queue name'),
+    '#default_value' => variable_get('islandora_job_multisite_prefix', FALSE),
+  );
   return system_settings_form($form);
 }
