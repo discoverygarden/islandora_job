@@ -52,4 +52,5 @@ function islandora_job_requirements($phase) {
 function islandora_job_uninstall() {
   variable_del('islandora_job_server_host');
   variable_del('islandora_job_server_port');
+  variable_del('islandora_job_multisite_prefix');
 }
