@@ -26,6 +26,16 @@ function islandora_job_drush_command() {
     'description' => t('Count all managed gearman workers.'),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
   );
+  $items['islandora-job-list-functions'] = array(
+    'description' => t('Lists all job functions.'),
+    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
+    'options' => array(
+      'param_format' => array(
+        'description' => t('Flag to format as gearman server params, prefixed by "-f". Functions are otherwise newline-separated.'),
+        'required' => FALSE,
+      ),
+    ),
+  );
   return $items;
 }
 
@@ -92,4 +102,22 @@ function drush_islandora_job_router() {
     module_load_include($type, $module, $name);
     echo call_user_func_array($func_name, $args);
   }
+}
+
+/**
+ * Prints a list of multisite-aware job names out to the command line.
+ */
+function drush_islandora_job_list_functions() {
+  module_load_include('inc', 'islandora_job', 'includes/utilities');
+  $format = drush_get_option('param_format', FALSE);
+
+  $functions = array_map('islandora_job_function_name', array_keys(module_invoke_all('islandora_job_register_jobs')));
+  $imploder = $format ? ' ' : "\n";
+  if ($format) {
+    $add_prefix = function (&$function) {
+      $function = "-f $function";
+    };
+    array_walk($functions, $add_prefix);
+  }
+  drush_print(implode($imploder, $functions));
 }
