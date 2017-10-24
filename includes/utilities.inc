@@ -57,7 +57,7 @@ function islandora_job_function_name($job_name) {
  * @return string
  *   A JSON encoded payload for Gearman.
  */
-function islandora_job_format_payload($job_name, $args) {
+function islandora_job_format_payload($job_name, array $args) {
   global $user;
   global $base_url;
   array_shift($args);

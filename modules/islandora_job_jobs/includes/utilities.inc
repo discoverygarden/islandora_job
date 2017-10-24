@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Misc utility functions.
