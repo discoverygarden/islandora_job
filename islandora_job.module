@@ -19,7 +19,7 @@ function islandora_job_menu() {
     'description' => 'Configuration page for the Islandora Job module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_job_admin_form'),
-    'access callback' => TRUE,
+    'access arguments' => array('administer site configuration'),
     'file' => 'includes/admin.form.inc',
   );
   return $items;
