@@ -5,6 +5,10 @@
  * Hooks and API for the islandora_job_module.
  */
 
+const ISLANDORA_JOB_STATE__ERROR = -1;
+const ISLANDORA_JOB_STATE__WAITING = 0;
+const ISLANDORA_JOB_STATE__RUNNING = 1;
+
 /**
  * Implements hook_menu().
  */
@@ -31,14 +35,18 @@ function islandora_job_menu() {
  * @param string $job_name
  *   Name of the job to run.
  *
- * @return string
- *   The result of the job
+ * @return string|bool
+ *   The result of the job or FALSE if it was not queued for duping.
  */
 function islandora_job_submit($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
+  module_load_include('inc', 'islandora_job', 'includes/db');
   $payload = islandora_job_format_payload($job_name, func_get_args());
-  $client = islandora_job_get_client();
-  return $client->doNormal(islandora_job_function_name($job_name), $payload);
+  if (islandora_job_ensure_job_deduping($payload)) {
+    islandora_job_insert_job_status($payload);
+    $client = islandora_job_get_client();
+    return $client->doNormal(islandora_job_function_name($job_name), $payload);
+  }
 }
 
 /**
@@ -51,14 +59,32 @@ function islandora_job_submit($job_name) {
  * @param string $job_name
  *   Name of the job to run.
  *
- * @return string
- *   The job handle
+ * @return string|bool
+ *   The job handle or FALSE if it was not queued.
  */
 function islandora_job_submit_background($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
+  module_load_include('inc', 'islandora_job', 'includes/db');
   $payload = islandora_job_format_payload($job_name, func_get_args());
-  $client = islandora_job_get_client();
-  return $client->doBackground(islandora_job_function_name($job_name), $payload);
+  if (islandora_job_ensure_job_deduping($payload)) {
+    $transaction = db_transaction();
+    try {
+      islandora_job_insert_job_status($payload);
+      $client = islandora_job_get_client();
+      $job_handle = $client->doBackground(islandora_job_function_name($job_name), $payload);
+      if ($client->returnCode() != GEARMAN_SUCCESS) {
+        $transaction->rollback();
+        unset($transaction);
+        return FALSE;
+      }
+      return $job_handle;
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      unset($transaction);
+    }
+  }
+  return FALSE;
 }
 
 /**
