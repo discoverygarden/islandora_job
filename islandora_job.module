@@ -43,9 +43,19 @@ function islandora_job_submit($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/db');
   $payload = islandora_job_format_payload($job_name, func_get_args());
   if (islandora_job_ensure_job_deduping($payload)) {
-    islandora_job_insert_job_status($payload);
-    $client = islandora_job_get_client();
-    return $client->doNormal(islandora_job_function_name($job_name), $payload);
+    $state_id = islandora_job_insert_job_status($payload);
+    try {
+      $client = islandora_job_get_client();
+      $job_handle = $client->doNormal(islandora_job_function_name($job_name), $payload);
+      if ($client->returnCode() != GEARMAN_SUCCESS) {
+        islandora_job_remove_job_status($state_id);
+        return FALSE;
+      }
+      return $job_handle;
+    }
+    catch (Exception $e) {
+      islandora_job_remove_job_status($state_id);
+    }
   }
 }
 
@@ -67,21 +77,18 @@ function islandora_job_submit_background($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/db');
   $payload = islandora_job_format_payload($job_name, func_get_args());
   if (islandora_job_ensure_job_deduping($payload)) {
-    $transaction = db_transaction();
+    $state_id = islandora_job_insert_job_status($payload);
     try {
-      islandora_job_insert_job_status($payload);
       $client = islandora_job_get_client();
       $job_handle = $client->doBackground(islandora_job_function_name($job_name), $payload);
       if ($client->returnCode() != GEARMAN_SUCCESS) {
-        $transaction->rollback();
-        unset($transaction);
+        islandora_job_remove_job_status($state_id);
         return FALSE;
       }
       return $job_handle;
     }
     catch (Exception $e) {
-      $transaction->rollback();
-      unset($transaction);
+      islandora_job_remove_job_status($state_id);
     }
   }
   return FALSE;
