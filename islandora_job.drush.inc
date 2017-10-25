@@ -85,7 +85,8 @@ function drush_islandora_job_router() {
   // connection gets created should fix it.
   drupal_static_reset('islandora_get_tuque_connection');
   // Parse the payload into an associative array.
-  $payload = json_decode(stream_get_contents(STDIN), TRUE);
+  $raw_payload = stream_get_contents(STDIN);
+  $payload = json_decode($raw_payload, TRUE);
   // Get the list of all available jobs.
   $job_registry = module_invoke_all("islandora_job_register_jobs");
 
@@ -100,7 +101,24 @@ function drush_islandora_job_router() {
     $module = $job['module'];
     $name = isset($job['name']) ? $job['name'] : NULL;
     module_load_include($type, $module, $name);
-    echo call_user_func_array($func_name, $args);
+    module_load_include('inc', 'islandora_job', 'includes/db');
+    $status_id = islandora_job_start_job_status($raw_payload);
+    $transaction = db_transaction();
+    try {
+      $return = call_user_func_array($func_name, $args);
+      islandora_job_remove_job_status($status_id);
+      unset($transaction);
+      echo $return;
+    }
+    catch (Exception $e) {
+      drush_set_error('islandora_job', dt('The callback !func_name with args !args threw an exception.', array(
+        '!func_name' => $func_name,
+        '!args' => implode(', ', $args),
+      )));
+      islandora_job_update_job_status($status_id, ISLANDORA_JOB_STATE__ERROR);
+      unset($transaction);
+      throw $e;
+    }
   }
 }
 

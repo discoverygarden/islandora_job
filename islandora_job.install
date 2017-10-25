@@ -54,3 +54,88 @@ function islandora_job_uninstall() {
   variable_del('islandora_job_server_port');
   variable_del('islandora_job_multisite_prefix');
 }
+
+/**
+ * Implements hook_schema().
+ */
+function islandora_job_schema() {
+  $schema = array();
+  $schema['islandora_job_job_status'] = array(
+    'description' => 'Holds the state of the jobs in the queue.',
+    'fields' => array(
+      'status_id' => array(
+        'description' => 'The ID of the status entry.',
+        'type' => 'serial',
+        'length' => 11,
+        'not null' => TRUE,
+      ),
+      'data' => array(
+        'description' => 'The payload for the job.',
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+      'state' => array(
+        'description' => 'The state of the job.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'unsigned' => FALSE,
+      ),
+    ),
+    'primary key' => array('status_id'),
+    'foreign keys' => array(
+      'associated_entry' => array(
+        'table' => 'gearman_queue',
+        'fields' => array(
+          'data' => 'data',
+        ),
+      ),
+    ),
+  );
+  return $schema;
+}
+
+/**
+ * Adds the missing table for tracking job statuses.
+ */
+function islandora_job_update_7001() {
+  if (!db_table_exists('islandora_job_job_status')) {
+    $table = array(
+      'description' => 'Holds the state of the jobs in the queue.',
+      'fields' => array(
+        'status_id' => array(
+          'description' => 'The ID of the status entry.',
+          'type' => 'serial',
+          'length' => 11,
+          'not null' => TRUE,
+        ),
+        'data' => array(
+          'description' => 'The payload for the job.',
+          'type' => 'blob',
+          'size' => 'big',
+          'not null' => TRUE,
+        ),
+        'state' => array(
+          'description' => 'The state of the job.',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+          'unsigned' => FALSE,
+        ),
+      ),
+      'primary key' => array('status_id'),
+      'foreign keys' => array(
+        'associated_entry' => array(
+          'table' => 'gearman_queue',
+          'fields' => array(
+            'data' => 'data',
+          ),
+        ),
+      ),
+    );
+    db_create_table('islandora_job_job_status', $table);
+  }
+}

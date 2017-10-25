@@ -5,6 +5,10 @@
  * Hooks and API for the islandora_job_module.
  */
 
+const ISLANDORA_JOB_STATE__ERROR = -1;
+const ISLANDORA_JOB_STATE__WAITING = 0;
+const ISLANDORA_JOB_STATE__RUNNING = 1;
+
 /**
  * Implements hook_menu().
  */
@@ -15,7 +19,7 @@ function islandora_job_menu() {
     'description' => 'Configuration page for the Islandora Job module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_job_admin_form'),
-    'access callback' => TRUE,
+    'access arguments' => array('administer site configuration'),
     'file' => 'includes/admin.form.inc',
   );
   return $items;
@@ -31,14 +35,28 @@ function islandora_job_menu() {
  * @param string $job_name
  *   Name of the job to run.
  *
- * @return string
- *   The result of the job
+ * @return string|bool
+ *   The result of the job or FALSE if it was not queued for duping.
  */
 function islandora_job_submit($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
+  module_load_include('inc', 'islandora_job', 'includes/db');
   $payload = islandora_job_format_payload($job_name, func_get_args());
-  $client = islandora_job_get_client();
-  return $client->doNormal(islandora_job_function_name($job_name), $payload);
+  if (islandora_job_ensure_job_deduping($payload)) {
+    $state_id = islandora_job_insert_job_status($payload);
+    try {
+      $client = islandora_job_get_client();
+      $job_handle = $client->doNormal(islandora_job_function_name($job_name), $payload);
+      if ($client->returnCode() != GEARMAN_SUCCESS) {
+        islandora_job_remove_job_status($state_id);
+        return FALSE;
+      }
+      return $job_handle;
+    }
+    catch (Exception $e) {
+      islandora_job_remove_job_status($state_id);
+    }
+  }
 }
 
 /**
@@ -51,14 +69,29 @@ function islandora_job_submit($job_name) {
  * @param string $job_name
  *   Name of the job to run.
  *
- * @return string
- *   The job handle
+ * @return string|bool
+ *   The job handle or FALSE if it was not queued.
  */
 function islandora_job_submit_background($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
+  module_load_include('inc', 'islandora_job', 'includes/db');
   $payload = islandora_job_format_payload($job_name, func_get_args());
-  $client = islandora_job_get_client();
-  return $client->doBackground(islandora_job_function_name($job_name), $payload);
+  if (islandora_job_ensure_job_deduping($payload)) {
+    $state_id = islandora_job_insert_job_status($payload);
+    try {
+      $client = islandora_job_get_client();
+      $job_handle = $client->doBackground(islandora_job_function_name($job_name), $payload);
+      if ($client->returnCode() != GEARMAN_SUCCESS) {
+        islandora_job_remove_job_status($state_id);
+        return FALSE;
+      }
+      return $job_handle;
+    }
+    catch (Exception $e) {
+      islandora_job_remove_job_status($state_id);
+    }
+  }
+  return FALSE;
 }
 
 /**
@@ -71,7 +104,7 @@ function islandora_job_submit_background($job_name) {
  *   [
  *     'job_name' => 'my_sweet_job_function',
  *     'args' => array('herp', 'derp'),
- *   ]
+ *   ].
  * @param callable $callback
  *   A callback for when each task is completed.  See
  *   http://php.net/manual/en/gearmanclient.setcompletecallback.php
@@ -80,7 +113,7 @@ function islandora_job_submit_background($job_name) {
  * @return bool
  *   TRUE on success.
  */
-function islandora_job_submit_batch($tasks, $callback = NULL) {
+function islandora_job_submit_batch(array $tasks, $callback = NULL) {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
   $client = islandora_job_get_client();
   if (!is_null($callback)) {

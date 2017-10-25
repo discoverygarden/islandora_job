@@ -13,7 +13,7 @@
  * @param array $form_state
  *   Array containing the form state.
  */
-function islandora_job_admin_form($form, &$form_state) {
+function islandora_job_admin_form(array $form, array &$form_state) {
   $form['islandora_job_server_host'] = array(
     '#type' => 'textfield',
     '#title' => t('Job Server Hostname'),
