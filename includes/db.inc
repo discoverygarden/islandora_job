@@ -49,6 +49,8 @@ function islandora_job_update_job_status($job_id, $status) {
  *   The ID of the status to be used for removal later.
  */
 function islandora_job_start_job_status($data) {
+  // XXX: Note this is not a race condition as there will only ever be one job
+  // in the waiting state due to the deduplication introduced.
   // Get the status ID of the database to use to remove itself later on.
   $status_id = db_select('islandora_job_job_status', 'i')
     ->fields('i', array('status_id'))
