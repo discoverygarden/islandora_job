@@ -103,11 +103,9 @@ function drush_islandora_job_router() {
     module_load_include($type, $module, $name);
     module_load_include('inc', 'islandora_job', 'includes/db');
     $status_id = islandora_job_start_job_status($raw_payload);
-    $transaction = db_transaction();
     try {
       $return = call_user_func_array($func_name, $args);
       islandora_job_remove_job_status($status_id);
-      unset($transaction);
       echo $return;
     }
     catch (Exception $e) {
@@ -116,7 +114,6 @@ function drush_islandora_job_router() {
         '!args' => implode(', ', $args),
       )));
       islandora_job_update_job_status($status_id, ISLANDORA_JOB_STATE__ERROR);
-      unset($transaction);
       throw $e;
     }
   }
