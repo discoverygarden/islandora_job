@@ -101,5 +101,6 @@ function islandora_job_schema() {
  * Adds the missing table for tracking job statuses.
  */
 function islandora_job_update_7001() {
-  drupal_install_schema('islandora_job');
+  $schema = module_invoke('islandora_job', 'schema');
+  db_create_table('islandora_job_job_status', $schema['islandora_job_job_status']);
 }
