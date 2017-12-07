@@ -25,17 +25,17 @@ function islandora_job_insert_job_status($data) {
 /**
  * Updates a job's state.
  *
- * @param string $job_id
- *   The ID of the job being tracked to be updated.
+ * @param string $status_id
+ *   The ID of the job being tracked to be updated in this status table.
  * @param int $status
  *   The state of the job being created or updated.
  */
-function islandora_job_update_job_status($job_id, $status) {
+function islandora_job_update_job_status($status_id, $status) {
   db_update('islandora_job_job_status')
     ->fields(array(
       'state' => $status,
     ))
-    ->condition('status_id', $job_id)
+    ->condition('status_id', $status_id)
     ->execute();
 }
 
@@ -69,6 +69,44 @@ function islandora_job_start_job_status($data) {
 }
 
 /**
+ * Gets the state of the job.
+ * 
+ * @param string $data
+ *   The payload that identifies the job in question.
+ * 
+ * @return string
+ *   The state of the current job.
+ */
+function islandora_job_get_job_state($data) {
+  $state = db_select('islandora_job_job_status', 'i')
+    ->fields('i', array('state'))
+    ->condition('data', $data)
+    ->execute()
+    ->fetchField();
+
+  return $state;
+}
+
+/**
+ * Gets the status_id of the job.
+ * 
+ * @param string $data
+ *   The payload that identifies the job in question.
+ * 
+ * @return string
+ *   The status_id for the given job.
+ */
+function islandora_job_get_job_status_id($data) {
+  $status_id = db_select('islandora_job_job_status', 'i')
+    ->fields('i', array('status_id'))
+    ->condition('data', $data)
+    ->execute()
+    ->fetchField();
+
+  return $status_id;
+}
+
+/**
  * Removes a job from tracking.
  *
  * @param string $job_id
@@ -83,6 +121,9 @@ function islandora_job_remove_job_status($job_id) {
 /**
  * Ensures there's no duplicate job that already is waiting to be ran.
  *
+ * This will ONLY return true if the check for dupes is able to update
+ * one row from WAITING to RUNNING.
+ *
  * @param string $data
  *   A JSON encoded string representing the payload data.
  *
@@ -90,10 +131,24 @@ function islandora_job_remove_job_status($job_id) {
  *   TRUE if the job is able to be queued, FALSE otherwise.
  */
 function islandora_job_ensure_job_deduping($data) {
-  return !db_select('islandora_job_job_status', 'i')
-    ->fields('i', array('status_id'))
+  $rows_updated = db_update('islandora_job_job_status')
+    ->fields(array(
+      'state' => ISLANDORA_JOB_STATE__RUNNING,
+    ))
     ->condition('data', $data)
-    ->condition('state', ISLANDORA_JOB_STATE__WAITING, '=')
-    ->execute()
-    ->fetchField();
+    ->condition('state', ISLANDORA_JOB_STATE__WAITING)
+    ->execute();
+
+  if ($rows_updated < 1) {
+    // The row might not have existed -- if search for it still yeilds 0
+    // records, an attempt to insert the new record here.
+    $status_id = islandora_job_get_job_status_id($data);
+    if (!$status_id) {
+      islandora_job_insert_job_status($data);
+      // NOW, when this calls itself again, the "WAITING" record should have existed.
+      // there should be a status record...
+      return islandora_job_ensure_job_deduping($data);
+    }
+  }
+  return ($rows_updated == 1);
 }
