@@ -102,19 +102,22 @@ function drush_islandora_job_router() {
     $name = isset($job['name']) ? $job['name'] : NULL;
     module_load_include($type, $module, $name);
     module_load_include('inc', 'islandora_job', 'includes/db');
+    $state = islandora_job_get_job_state($raw_payload);
     $status_id = islandora_job_start_job_status($raw_payload);
-    try {
-      $return = call_user_func_array($func_name, $args);
-      islandora_job_remove_job_status($status_id);
-      echo $return;
-    }
-    catch (Exception $e) {
-      drush_set_error('islandora_job', dt('The callback !func_name with args !args threw an exception.', array(
-        '!func_name' => $func_name,
-        '!args' => implode(', ', $args),
-      )));
-      islandora_job_update_job_status($status_id, ISLANDORA_JOB_STATE__ERROR);
-      throw $e;
+    if ($state == ISLANDORA_JOB_STATE__WAITING) {
+      try {
+        $return = call_user_func_array($func_name, $args);
+        islandora_job_remove_job_status($status_id);
+        echo $return;
+      }
+      catch (Exception $e) {
+        drush_set_error('islandora_job', dt('The callback !func_name with args !args threw an exception.', array(
+          '!func_name' => $func_name,
+          '!args' => implode(', ', $args),
+        )));
+        islandora_job_update_job_status($status_id, ISLANDORA_JOB_STATE__ERROR);
+        throw $e;
+      }
     }
   }
 }
