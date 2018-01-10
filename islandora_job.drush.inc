@@ -151,7 +151,7 @@ function drush_islandora_job_list_functions() {
 function islandora_job_router_job_error($status_id, $name, $args) {
   $error = error_get_last();
 
-  if ($error != NULL) {
+  if ($error != NULL && $error['type'] == E_ERROR) {
     drush_set_error('islandora_job', dt('The callback !func_name with args !args threw an exception: !exception in !file on line !line.', array(
       '!func_name' => $name,
       '!args' => implode(', ', $args),
