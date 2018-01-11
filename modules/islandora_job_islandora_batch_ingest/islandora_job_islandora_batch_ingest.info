@@ -4,5 +4,4 @@ package = Islandora Tools
 core = 7.x
 version = 7.x-dev
 dependencies[] = islandora_job
-dependencies[] = islandora
 dependencies[] = islandora_batch
