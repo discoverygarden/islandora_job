@@ -103,6 +103,7 @@ function drush_islandora_job_router() {
     module_load_include($type, $module, $name);
     module_load_include('inc', 'islandora_job', 'includes/db');
     $status_id = islandora_job_start_job_status($raw_payload);
+    register_shutdown_function('islandora_job_router_job_error', $status_id, $func_name, $args);
     try {
       $return = call_user_func_array($func_name, $args);
       islandora_job_remove_job_status($status_id);
@@ -135,4 +136,29 @@ function drush_islandora_job_list_functions() {
     array_walk($functions, $add_prefix);
   }
   drush_print(implode($imploder, $functions));
+}
+
+/**
+ * Shutdown callback to update job status in the event of a fatal error.
+ *
+ * @param int $status_id
+ *   The status ID of the job to be updated.
+ * @param string $name
+ *   The name of the job.
+ * @param array $args
+ *   The arguments that were passed to the job.
+ */
+function islandora_job_router_job_error($status_id, $name, $args) {
+  $error = error_get_last();
+
+  if ($error != NULL && $error['type'] == E_ERROR) {
+    drush_set_error('islandora_job', dt('The callback !func_name with args !args threw an exception: !exception in !file on line !line.', array(
+      '!func_name' => $name,
+      '!args' => implode(', ', $args),
+      '!exception' => isset($error['message']) ? $error['message'] : '',
+      '!file' => isset($error['file']) ? $error['file'] : '',
+      '!line' => isset($error['line']) ? $error['line'] : '',
+    )));
+    islandora_job_update_job_status($status_id, ISLANDORA_JOB_STATE__ERROR);
+  }
 }
