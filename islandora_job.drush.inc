@@ -83,6 +83,7 @@ function drush_islandora_job_router() {
   // without credentials (when your site's front page is
   // 'islandora/object/some:object', for example). Resetting to ensure a new
   // connection gets created should fix it.
+  module_load_include('inc', 'islandora_job', 'includes/db');
   drupal_static_reset('islandora_get_tuque_connection');
   // Parse the payload into an associative array.
   $raw_payload = stream_get_contents(STDIN);
@@ -100,10 +101,9 @@ function drush_islandora_job_router() {
     $type = $job['type'];
     $module = $job['module'];
     $name = isset($job['name']) ? $job['name'] : NULL;
-    module_load_include($type, $module, $name);
-    module_load_include('inc', 'islandora_job', 'includes/db');
     $status_id = islandora_job_start_job_status($raw_payload);
     register_shutdown_function('islandora_job_router_job_error', $status_id, $func_name, $args);
+    module_load_include($type, $module, $name);
     try {
       $return = call_user_func_array($func_name, $args);
       islandora_job_remove_job_status($status_id);
@@ -139,7 +139,7 @@ function drush_islandora_job_list_functions() {
 }
 
 /**
- * Shutdown callback to update job status in the event of a fatal error.
+ * Shutdown callback to update job status in the event of an error.
  *
  * @param int $status_id
  *   The status ID of the job to be updated.
@@ -151,7 +151,12 @@ function drush_islandora_job_list_functions() {
 function islandora_job_router_job_error($status_id, $name, $args) {
   $error = error_get_last();
 
-  if ($error != NULL && $error['type'] == E_ERROR) {
+  $applicable_errors = array(
+    E_ERROR,
+    E_PARSE,
+    E_RECOVERABLE_ERROR,
+  );
+  if ($error != NULL && in_array($error['type'], $applicable_errors)) {
     drush_set_error('islandora_job', dt('The callback !func_name with args !args threw an exception: !exception in !file on line !line.', array(
       '!func_name' => $name,
       '!args' => implode(', ', $args),
