@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Triggers the ingestion of a batch set.
+ */
+
+/**
+ * Implements hook_islandora_job_register_jobs().
+ */
+function islandora_job_islandora_batch_ingest_islandora_job_register_jobs() {
+  return array(
+    'islandora_job_islandora_batch_ingest_ingest_set' => array(
+      'module' => 'islandora_job_islandora_batch_ingest',
+      'name' => 'includes/jobs',
+      'type' => 'inc',
+    ),
+  );
+}

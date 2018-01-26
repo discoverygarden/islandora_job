@@ -1,0 +1,7 @@
+name = Islandora Job Batch Ingest
+description = Queues Islandora batches for batch ingest.
+package = Islandora Tools
+core = 7.x
+version = 7.x-dev
+dependencies[] = islandora_job
+dependencies[] = islandora_batch
