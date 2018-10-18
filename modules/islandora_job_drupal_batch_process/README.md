@@ -18,9 +18,8 @@ http://support.discoverygarden.ca
 
 ## Maintainers/Sponsors
 
-This project has been sponsored by:
-
-* [discoverygarden](http://www.discoverygarden.ca)
+This project was developed by [discoverygarden](http://www.discoverygarden.ca),
+with sponsorship from the [University of Sydney](https://sydney.edu.au/).
 
 ## Development
 
