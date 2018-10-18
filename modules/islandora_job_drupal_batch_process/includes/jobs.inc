@@ -11,7 +11,7 @@
  * @param array $batch
  *   A batch definition to process.
  */
-function islandora_job_drupal_batch_process($batch) {
+function islandora_job_drupal_batch_process(array $batch) {
   batch_set($batch);
   drush_backend_batch_process();
 }
