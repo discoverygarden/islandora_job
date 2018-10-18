@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * General hook implementations.
+ */
+
+/**
+ * Implements hook_islandora_job_register_jobs().
+ */
+function islandora_job_drupal_batch_process_islandora_job_register_jobs() {
+  return array(
+    'islandora_job_drupal_batch_process' => array(
+      'module' => 'islandora_job_drupal_batch_process',
+      'name' => 'includes/jobs',
+      'type' => 'inc',
+    ),
+  );
+}
