@@ -14,6 +14,7 @@ function islandora_job_jobs_islandora_job_register_jobs() {
       'type' => 'inc',
       'module' => 'islandora_job_jobs',
       'name' => 'includes/wrappers',
+      'alias' => 'ijj-d',
     ),
   );
 }

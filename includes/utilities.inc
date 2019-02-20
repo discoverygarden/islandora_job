@@ -70,3 +70,48 @@ function islandora_job_format_payload($job_name, array $args) {
     )
   );
 }
+
+/**
+ * Attempts to get the correct function for a given payload func_name.
+ *
+ * It's expected that this is either the actual function name or an alias.
+ *
+ * @param string $func_name
+ *   The function name to get the full function for.
+ *
+ * @return string
+ *   The full function name.
+ */
+function islandora_job_get_full_func_name($func_name) {
+  $alias_map = &drupal_static(__FUNCTION__);
+  if (!isset($alias_map)) {
+    foreach (module_invoke_all("islandora_job_register_jobs") as $func => $job) {
+      if (isset($job['alias'])) {
+        $alias_map[$job['alias']] = $func;
+      }
+    }
+  }
+  if (isset($alias_map[$func_name])) {
+    return $alias_map[$func_name];
+  }
+  return $func_name;
+}
+
+/**
+ * Gets the entire list of function names, aliased if available.
+ *
+ * @return array
+ *   The list of (possibly aliased) function names.
+ */
+function islandora_job_get_aliased_function_names() {
+  $names = array();
+  foreach (module_invoke_all('islandora_job_register_jobs') as $func => $job) {
+    if (isset($job['alias'])) {
+      $names[] = $job['alias'];
+    }
+    else {
+      $names[] = $func;
+    }
+  }
+  return $names;
+}
