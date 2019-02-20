@@ -105,7 +105,7 @@ function islandora_job_submit_background($job_name) {
  *     'job_name' => 'my_sweet_job_function',
  *     'args' => array('herp', 'derp'),
  *   ].
- * @param callable $callback
+ * @param callable|null $callback
  *   A callback for when each task is completed.  See
  *   http://php.net/manual/en/gearmanclient.setcompletecallback.php
  *   and http://gearman.org/examples/multi-query/ for more.

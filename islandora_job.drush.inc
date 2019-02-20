@@ -104,7 +104,7 @@ function drush_islandora_job_list_functions() {
  * @param array $args
  *   The arguments that were passed to the job.
  */
-function islandora_job_router_job_error($status_id, $name, $args) {
+function islandora_job_router_job_error($status_id, $name, array $args) {
   $error = error_get_last();
 
   $applicable_errors = array(
