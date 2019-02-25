@@ -39,6 +39,7 @@ function drush_islandora_job_router() {
   // 'islandora/object/some:object', for example). Resetting to ensure a new
   // connection gets created should fix it.
   module_load_include('inc', 'islandora_job', 'includes/db');
+  module_load_include('inc', 'islandora_job', 'includes/utilities');
   drupal_static_reset('islandora_get_tuque_connection');
   // Parse the payload into an associative array.
   $raw_payload = stream_get_contents(STDIN);
@@ -46,7 +47,7 @@ function drush_islandora_job_router() {
   // Get the list of all available jobs.
   $job_registry = module_invoke_all("islandora_job_register_jobs");
 
-  $func_name = $payload['func'];
+  $func_name = islandora_job_get_full_func_name($payload['func']);
   $args = $payload['args'];
 
   // Dynamically execute the job function, if it's in the list.
@@ -82,7 +83,7 @@ function drush_islandora_job_list_functions() {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
   $format = drush_get_option('param_format', FALSE);
 
-  $functions = array_map('islandora_job_function_name', array_keys(module_invoke_all('islandora_job_register_jobs')));
+  $functions = array_map('islandora_job_function_name', islandora_job_get_aliased_function_names());
   $imploder = $format ? ' ' : "\n";
   if ($format) {
     $add_prefix = function (&$function) {
@@ -103,7 +104,7 @@ function drush_islandora_job_list_functions() {
  * @param array $args
  *   The arguments that were passed to the job.
  */
-function islandora_job_router_job_error($status_id, $name, $args) {
+function islandora_job_router_job_error($status_id, $name, array $args) {
   $error = error_get_last();
 
   $applicable_errors = array(

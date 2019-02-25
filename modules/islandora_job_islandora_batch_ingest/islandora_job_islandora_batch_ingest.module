@@ -14,6 +14,7 @@ function islandora_job_islandora_batch_ingest_islandora_job_register_jobs() {
       'module' => 'islandora_job_islandora_batch_ingest',
       'name' => 'includes/jobs',
       'type' => 'inc',
+      'alias' => 'ibi-j',
     ),
   );
 }
