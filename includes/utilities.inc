@@ -23,7 +23,8 @@ function islandora_job_get_client() {
  * Get job function name.
  *
  * This function allows support for multisites by adding the site
- * name to each job function.
+ * name to each job function, and swaps out for the alias when
+ * necessary.
  *
  * @param string $job_name
  *   Name of the job without site.
@@ -32,6 +33,7 @@ function islandora_job_get_client() {
  *   Job name with site added.
  */
 function islandora_job_function_name($job_name) {
+  $job_name = islandora_job_get_aliased_func_name($job_name);
   // Chop the 'sites/' part of the path off. This gives you the name of the
   // site dir for the multisite, for example sites/example would be example
   // we use this to create the queue for this multisite.
@@ -88,6 +90,32 @@ function islandora_job_get_full_func_name($func_name) {
     foreach (module_invoke_all("islandora_job_register_jobs") as $func => $job) {
       if (isset($job['alias'])) {
         $alias_map[$job['alias']] = $func;
+      }
+    }
+  }
+  if (isset($alias_map[$func_name])) {
+    return $alias_map[$func_name];
+  }
+  return $func_name;
+}
+
+/**
+ * Attempts to get the correct alias for a given function name.
+ *
+ * If the function doesn't provide an alias, it will be returned unaltered.
+ *
+ * @param string $func_name
+ *   The function name to get the alias for.
+ *
+ * @return string
+ *   The aliased function name.
+ */
+function islandora_job_get_aliased_func_name($func_name) {
+  $alias_map = &drupal_static(__FUNCTION__);
+  if (!isset($alias_map)) {
+    foreach (module_invoke_all("islandora_job_register_jobs") as $func => $job) {
+      if (isset($job['alias'])) {
+        $alias_map[$func] = $job['alias'];
       }
     }
   }
