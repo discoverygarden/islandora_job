@@ -197,3 +197,29 @@ sudo service restart gearman-job-server
 ## Accepting Remote Connections
 
 By the defaults defined in /etc/default/gearman-job-server, Gearman will only accept connections from localhost.  If you want to allow connections from other computers,  change the `--listen` argument to include your whitelisted ip in the defaults file.
+
+## Configuration
+
+There is optional UI reporting to display to the end user when something has yet
+to be processed. This can be configured via the administration form for the
+module.
+
+In the event a multi-site structure is being used and Gearman lives on a remote
+server an entry in the settings.php will need to be present to allow the
+gearman_queue table to be queried.
+
+The entry should be something similar to the below:
+```
+'gearman_queue' => array(
+      'default' => array(
+        'database' => 'test',
+        'username' => 'test',
+        'password' => 'test',
+        'host' => 'localhost',
+        'port' => '',
+        'driver' => 'mysql',
+        'prefix' => '',
+      ),
+    ),
+```
+NOTE: The keys for `gearman_queue` and `default` must be present.

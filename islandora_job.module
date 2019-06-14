@@ -8,6 +8,7 @@
 const ISLANDORA_JOB_STATE__ERROR = -1;
 const ISLANDORA_JOB_STATE__WAITING = 0;
 const ISLANDORA_JOB_STATE__RUNNING = 1;
+const ISLANDORA_JOB_VIEW_MESSAGES = 'view islandora job messages';
 
 /**
  * Implements hook_menu().
@@ -23,6 +24,19 @@ function islandora_job_menu() {
     'file' => 'includes/admin.form.inc',
   );
   return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function islandora_job_permission() {
+  $perms = array();
+
+  $perms[ISLANDORA_JOB_VIEW_MESSAGES] = array(
+    'title' => t('View Islandora Jobs messages'),
+    'description' => t('See reporting messages from the Gearman queue.'),
+  );
+  return $perms;
 }
 
 /**
@@ -128,4 +142,35 @@ function islandora_job_submit_batch(array $tasks, $callback = NULL) {
     $client->addTask(islandora_job_function_name($job_name), $payload);
   }
   return $client->runTasks();
+}
+
+/**
+ * Implements hook_islandora_view_object().
+ */
+function islandora_job_islandora_view_object(AbstractObject $object) {
+  if (variable_get('islandora_job_display_messages', FALSE) && islandora_object_access(ISLANDORA_JOB_VIEW_MESSAGES, $object)) {
+    global $base_url;
+    $like_pid = format_string('%!like%', array(
+      '!like' => db_like($object->id),
+    ));
+    $like_url = format_string('%!like%', array(
+      '!like' => db_like(json_encode($base_url)),
+    ));
+    $connection = variable_get('islandora_job_display_messages_remote_database', FALSE) ? Database::getConnection('default', 'gearman_queue') : Database::getConnection();
+    $rows = $connection->select('gearman_queue', 'g')
+      ->fields('g', array())
+      ->condition('data', $like_pid, 'LIKE')
+      ->condition('data', $like_url, 'LIKE')
+      ->execute()
+      ->fetchAll(PDO::FETCH_ASSOC);
+
+    $jobs = array();
+    foreach ($rows as $row) {
+      $data = json_decode($row['data'], TRUE);
+      $jobs[] = $data['func'];
+    }
+    if (!empty($jobs)) {
+      drupal_set_message(format_plural(count($jobs), 'There is one job waiting to be processed in the Gearman queue: !jobs.', 'There are @count jobs waiting to be processed: !jobs', array('!jobs' => implode(' ,', $jobs))), 'warning');
+    }
+  }
 }
