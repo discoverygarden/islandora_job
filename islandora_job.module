@@ -150,7 +150,7 @@ function islandora_job_submit_batch(array $tasks, $callback = NULL) {
 function islandora_job_islandora_view_object(AbstractObject $object) {
   if (variable_get('islandora_job_display_messages', FALSE) && islandora_object_access(ISLANDORA_JOB_VIEW_MESSAGES, $object)) {
     global $base_url;
-    $like_pid = format_string('%!like%', array(
+    $like_pid = format_string('%"!like"%', array(
       '!like' => db_like($object->id),
     ));
     $like_url = format_string('%!like%', array(

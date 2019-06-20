@@ -59,7 +59,7 @@ function islandora_job_admin_form(array $form, array &$form_state) {
  */
 function islandora_job_display_messages_validate($element, &$form_state, $form) {
   if ($element['#value'] === 1) {
-    $connection = $form_state['values']['islandora_job_display_messages_remote_database'] === 1 ? Database::getConnection('default', 'gearman_queue') : $connection = Database::getConnection();
+    $connection = $form_state['values']['islandora_job_display_messages_remote_database'] === 1 ? Database::getConnection('default', 'gearman_queue') : Database::getConnection();
     if (!$connection->schema()->tableExists('gearman_queue')) {
       form_error($element, t('Unable to find the gearman_queue table to query.'));
     }
