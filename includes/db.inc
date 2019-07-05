@@ -40,6 +40,40 @@ function islandora_job_update_job_status($job_id, $status) {
 }
 
 /**
+ * Selects the status entries for a given job.
+ *
+ * @param string $data
+ *   A job payload for which to search.
+ * @param int $state
+ *   The state to which to constrain results.
+ *
+ * @return DatabaseStatementInterface
+ *   An executed SELECT query.
+ */
+function _islandora_job_status_id_results($data, $state = ISLANDORA_JOB_STATE__WAITING) {
+  $info = Database::getConnectionInfo();
+  $driver = $info['default']['driver'];
+
+  $query = db_select('islandora_job_job_status', 'i')
+    ->fields('i', array('status_id'))
+    ->condition('state', $state);
+
+  if ($driver == 'pgsql') {
+    // XXX: Not sure who's to blame (probably Drupal?); however, Postgres blows
+    // up with insufficiently escaped input when querying in the data.
+    // Specifically, seems to run into issues due to the escaping of forward-
+    // slashes in the "site" part of the payload; however, could be encountered
+    // elsewhere in different jobs... let's just fully escape 'em.
+    $query->condition('data', addcslashes($data, '\\'));
+  }
+  else {
+    $query->condition('data', $data);
+  }
+
+  return $query->execute();
+}
+
+/**
  * Updates a job's state given a payload.
  *
  * @param string $data
@@ -49,23 +83,20 @@ function islandora_job_update_job_status($job_id, $status) {
  *   The ID of the status to be used for removal later.
  */
 function islandora_job_start_job_status($data) {
-  // XXX: Note this is not a race condition as there will only ever be one job
-  // in the waiting state due to the deduplication introduced.
-  // Get the status ID of the database to use to remove itself later on.
-  $status_id = db_select('islandora_job_job_status', 'i')
-    ->fields('i', array('status_id'))
-    ->condition('data', $data)
-    ->condition('state', ISLANDORA_JOB_STATE__WAITING)
-    ->execute()
-    ->fetchField();
+  $tx = db_transaction();
 
-  db_update('islandora_job_job_status')
-    ->fields(array(
-      'state' => ISLANDORA_JOB_STATE__RUNNING,
-    ))
-    ->condition('status_id', $status_id)
-    ->execute();
-  return $status_id;
+  try {
+    // XXX: Note this is not a race condition as there will only ever be one job
+    // in the waiting state due to the deduplication introduced.
+    // Get the status ID of the database to use to remove itself later on.
+    $status_id = _islandora_job_status_id_results($data)->fetchField();
+    islandora_job_update_job_status($status_id, ISLANDORA_JOB_STATE__RUNNING);
+
+    return $status_id;
+  }
+  catch (Exception $e) {
+    $tx->rollback();
+  }
 }
 
 /**
@@ -90,10 +121,6 @@ function islandora_job_remove_job_status($job_id) {
  *   TRUE if the job is able to be queued, FALSE otherwise.
  */
 function islandora_job_ensure_job_deduping($data) {
-  return !db_select('islandora_job_job_status', 'i')
-    ->fields('i', array('status_id'))
-    ->condition('data', $data)
-    ->condition('state', ISLANDORA_JOB_STATE__WAITING, '=')
-    ->execute()
+  return !_islandora_job_status_id_results($data)
     ->fetchField();
 }

@@ -55,21 +55,34 @@ function islandora_job_permission() {
 function islandora_job_submit($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
   module_load_include('inc', 'islandora_job', 'includes/db');
-  $payload = islandora_job_format_payload($job_name, func_get_args());
+
+  $args = func_get_args();
+  $payload = islandora_job_format_payload($job_name, $args);
+  $subs = array(
+    '@job' => $job_name,
+    '@args' => print_r($args, TRUE),
+  );
+
   if (islandora_job_ensure_job_deduping($payload)) {
     $state_id = islandora_job_insert_job_status($payload);
     try {
       $client = islandora_job_get_client();
       $job_handle = $client->doNormal(islandora_job_function_name($job_name), $payload);
       if ($client->returnCode() != GEARMAN_SUCCESS) {
-        islandora_job_remove_job_status($state_id);
-        return FALSE;
+        throw new Exception(t('Failed to successfully enqueue...'));
       }
       return $job_handle;
     }
     catch (Exception $e) {
+      watchdog('islandora_job', 'Failed to execute job @job due to an exception. Exception message: @message Args: @args', $subs + array(
+        '@message' => $e->getMessage(),
+      ), WATCHDOG_WARNING);
       islandora_job_remove_job_status($state_id);
+      return FALSE;
     }
+  }
+  else {
+    watchdog('islandora_job', 'Job already queued; deduping @job with args: @args', $subs, WATCHDOG_DEBUG);
   }
 }
 
@@ -89,22 +102,35 @@ function islandora_job_submit($job_name) {
 function islandora_job_submit_background($job_name) {
   module_load_include('inc', 'islandora_job', 'includes/utilities');
   module_load_include('inc', 'islandora_job', 'includes/db');
-  $payload = islandora_job_format_payload($job_name, func_get_args());
+  $args = func_get_args();
+  $payload = islandora_job_format_payload($job_name, $args);
+  $subs = array(
+    '@job' => $job_name,
+    '@args' => print_r($args, TRUE),
+  );
+
   if (islandora_job_ensure_job_deduping($payload)) {
     $state_id = islandora_job_insert_job_status($payload);
     try {
       $client = islandora_job_get_client();
       $job_handle = $client->doBackground(islandora_job_function_name($job_name), $payload);
       if ($client->returnCode() != GEARMAN_SUCCESS) {
-        islandora_job_remove_job_status($state_id);
-        return FALSE;
+        throw new Exception(t('Failed to successfully enqueue...'));
       }
       return $job_handle;
     }
     catch (Exception $e) {
+      watchdog('islandora_job', 'Failed to submit job @job due to an exception. Exception message: @message Args: @args', $subs + array(
+        '@message' => $e->getMessage(),
+      ), WATCHDOG_WARNING);
       islandora_job_remove_job_status($state_id);
+      return FALSE;
     }
   }
+  else {
+    watchdog('islandora_job', 'Job already queued; deduping @job with args: @args', $subs, WATCHDOG_DEBUG);
+  }
+
   return FALSE;
 }
 
@@ -150,19 +176,33 @@ function islandora_job_submit_batch(array $tasks, $callback = NULL) {
 function islandora_job_islandora_view_object(AbstractObject $object) {
   if (variable_get('islandora_job_display_messages', FALSE) && islandora_object_access(ISLANDORA_JOB_VIEW_MESSAGES, $object)) {
     global $base_url;
+
+    $connection = variable_get('islandora_job_display_messages_remote_database', FALSE) ?
+      Database::getConnection('default', 'gearman_queue') :
+      Database::getConnection();
+
     $like_pid = format_string('%"!like"%', array(
-      '!like' => db_like($object->id),
+      '!like' => $connection->escapeLike($object->id),
     ));
     $like_url = format_string('%!like%', array(
-      '!like' => db_like(json_encode($base_url)),
+      '!like' => $connection->escapeLike(json_encode($base_url)),
     ));
-    $connection = variable_get('islandora_job_display_messages_remote_database', FALSE) ? Database::getConnection('default', 'gearman_queue') : Database::getConnection();
-    $rows = $connection->select('gearman_queue', 'g')
+
+    $query = $connection->select('gearman_queue', 'g')
       ->fields('g', array())
-      ->condition('data', $like_pid, 'LIKE')
-      ->condition('data', $like_url, 'LIKE')
-      ->execute()
-      ->fetchAll(PDO::FETCH_ASSOC);
+      ->condition('data', $like_pid, 'LIKE');
+
+    if ($connection->driver() == 'pgsql') {
+      // XXX: Need to escape the backslashes some more, so they match the
+      // escaped contents...
+      $query->condition('data', addcslashes($like_url, '\\'), 'LIKE');
+    }
+    else {
+      $query->condition('data', $like_url, 'LIKE');
+    }
+    $results = $query->execute();
+
+    $rows = $results->fetchAll(PDO::FETCH_ASSOC);
 
     $jobs = array();
     foreach ($rows as $row) {
