@@ -54,23 +54,23 @@ function _islandora_job_status_id_results($data, $state = ISLANDORA_JOB_STATE__W
   $info = Database::getConnectionInfo();
   $driver = $info['default']['driver'];
 
+  $query = db_select('islandora_job_job_status', 'i')
+    ->fields('i', array('status_id'))
+    ->condition('state', $state);
+
   if ($driver == 'pgsql') {
-    // XXX: Ran into type issues between the type of the "data" column and the
-    // value that we were trying to search for... Drupal uses the value passed
-    // as text, while the column is a blob (bytea) type, and so goes boom...
-    // To address, let's just cast the data to be text when we evaluate our
-    // condition.
-    return db_query('SELECT status_id FROM islandora_job_job_status WHERE data::text = :data AND state = :state', array(
-      ':data' => $data,
-      ':state' => $state,
-    ));
+    // XXX: Not sure who's to blame (probably Drupal?); however, Postgres blows
+    // up with insufficiently escaped input when querying in the data.
+    // Specifically, seems to run into issues due to the escaping of forward-
+    // slashes in the "site" part of the payload; however, could be encountered
+    // elsewhere in different jobs... let's just fully escape 'em.
+    $query->condition('data', addcslashes($data, '\\'));
+  }
+  else {
+    $query->condition('data', $data);
   }
 
-  return db_select('islandora_job_job_status', 'i')
-    ->fields('i', array('status_id'))
-    ->condition('data', $data)
-    ->condition('state', $state)
-    ->execute();
+  return $query->execute();
 }
 
 /**
