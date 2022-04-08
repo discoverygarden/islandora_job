@@ -50,6 +50,12 @@ function islandora_job_admin_form(array $form, array &$form_state) {
       ),
     ),
   );
+  $form['islandora_job_heartbeat'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Send heartbeat job with cron?'),
+    '#description' => t("Can help avoid timeouts with the Job server's connection to its persistent backend."),
+    '#default_value' => variable_get('islandora_job_heartbeat', TRUE),
+  );
 
   return system_settings_form($form);
 }

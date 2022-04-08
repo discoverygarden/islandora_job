@@ -214,3 +214,26 @@ function islandora_job_islandora_view_object(AbstractObject $object) {
     }
   }
 }
+
+/**
+ * Implements hook_islandora_job_register_jobs().
+ */
+function islandora_job_islandora_job_register_jobs() {
+  return array(
+    'islandora_job_heartbeat' => array(
+      'type' => 'inc',
+      'module' => 'islandora_job',
+      'name' => 'includes/heartbeat',
+      'alias' => 'ijh',
+    ),
+  );
+}
+
+/**
+ * Implements hook_cron().
+ */
+function islandora_job_cron() {
+  if (variable_get('islandora_job_heartbeat', TRUE)) {
+    islandora_job_submit_background('islandora_job_heartbeat', 'ping', time());
+  }
+}
