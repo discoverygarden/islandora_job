@@ -52,6 +52,16 @@ function islandora_job_jobs_form_islandora_job_admin_form_alter(&$form, &$form_s
       'required' => $conditions,
     ),
   );
+  $form['islandora_job_jobs_derivatives_idle_wait_requeue_opt'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Requeue optimization'),
+    '#description' => t('Immediately requeue first entrance under the time limit, ideally making way for other jobs which may be processable.'),
+    '#default_value' => variable_get('islandora_job_jobs_derivatives_idle_wait_requeue_opt', TRUE),
+    '#states' => array(
+      'visible' => $conditions,
+      'required' => $conditions,
+    ),
+  );
   $form['#validate'][] = 'islandora_job_jobs_islandora_job_admin_form_validate';
   return $form;
 }

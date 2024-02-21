@@ -49,7 +49,7 @@ function islandora_job_jobs_enforce_idle_wait($object, $entrances) {
         drush_log(t('Proceeding with derivatives for @pid despite having been modified in the last @time seconds (requeued @max times).', $subs), 'warning');
         watchdog('islandora_job_jobs', 'Proceeding with derivatives for @pid despite having been modified in the last @time seconds (requeued @max times).', $subs, WATCHDOG_WARNING, l(t('object'), "islandora/object/{$object->id}"));
       }
-      elseif ($entrances === 0) {
+      elseif (variable_get('islandora_job_jobs_derivatives_idle_wait_requeue_opt', TRUE) && $entrances === 0) {
         // A minor optimization if we get hit during heavy processing: If we
         // have not been requeued before this attempt, immediately requeue.
         // During heavy processing, there is a reasonable chance that there are
