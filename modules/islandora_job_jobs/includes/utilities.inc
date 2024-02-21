@@ -65,8 +65,7 @@ function islandora_job_jobs_enforce_idle_wait($object, $entrances) {
       }
       elseif ($entrances > 0) {
         // If we are re-entered a second time before the time has run out, let's
-        // explicitly let it pass (and return TRUE from the end of the
-        // function).
+        // explicitly let it pass.
         drush_log(t('Waiting for idle time for given object (@pid modified since @time seconds ago (@diff seconds, @entrances entrances)); sleeping.', array(
           '@pid' => $object->id,
           '@time' => $time,
@@ -74,6 +73,13 @@ function islandora_job_jobs_enforce_idle_wait($object, $entrances) {
           '@entrances' => $entrances,
         )), 'warning');
         sleep($time - $diff);
+        // XXX: Returning TRUE should have the job immediately processed by the
+        // the wrapping code. Returning FALSE should result in the wrapping code
+        // requeueing the job. Requeueing probably makes more sense in order to
+        // check the idle time again on re-entry (as it is possible that other
+        // actions have happened while we were sleeping); however, some may just
+        // want it to proceed.
+        return (bool) variable_get('islandora_job_jobs_derivatives_idle_wait_no_requeue', FALSE);
       }
     }
   }
