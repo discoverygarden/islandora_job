@@ -9,5 +9,6 @@
  * Heartbeat job callback.
  */
 function islandora_job_heartbeat($text, $time) {
-  // No-op.
+  // XXX: gearman apparently needs a value. Let's return one.
+  return TRUE;
 }
